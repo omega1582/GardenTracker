@@ -1,0 +1,11 @@
+<Solution>
+  <Project Path="GardenTracker.Api/GardenTracker.Api.csproj" />
+  <Project Path="GardenTracker.Core/GardenTracker.Core.csproj" />
+  <Project Path="GardenTracker.Data/GardenTracker.Data.csproj" />
+  <Project Path="GardenTracker.Services/GardenTracker.Services.csproj" />
+  <Project Path="GardenTracker.Tests/GardenTracker.Tests.csproj" />
+  <Project Path="GardenTracker.Database/GardenTracker.Database.sqlproj">
+    <Build />
+    <Deploy />
+  </Project>
+</Solution>

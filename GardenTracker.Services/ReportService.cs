@@ -1,0 +1,148 @@
+using GardenTracker.Core.Entities;
+using GardenTracker.Core.Interfaces.Repositories;
+using GardenTracker.Core.Interfaces.Services;
+using GardenTracker.Core.Models.Reports;
+
+namespace GardenTracker.Services;
+
+public class ReportService(
+    IReportRepository reportRepository,
+    IWaterBillRepository waterBillRepository,
+    IGardenRepository gardenRepository) : IReportService
+{
+    public async Task<SeasonSummaryResult?> GetSeasonSummaryAsync(int gardenId, int year, int userId)
+    {
+        var garden = await gardenRepository.GetByIdAsync(gardenId);
+        if (garden?.UserId != userId) return null;
+
+        var expenseTotals = (await reportRepository.GetSeasonExpenseTotalsAsync(gardenId, year)).ToList();
+        var harvestLines = (await reportRepository.GetSeasonHarvestValuesAsync(gardenId, year)).ToList();
+        var waterBills = (await waterBillRepository.GetByUserAsync(userId, year)).ToList();
+
+        var totalExpenses = expenseTotals.Sum(e => e.Total);
+        var totalHarvestValue = harvestLines
+            .Where(h => h.PricePerUnit.HasValue)
+            .Sum(h => h.Quantity * h.PricePerUnit!.Value);
+        var waterAttribution = ComputeWaterAttributionTotal(waterBills);
+
+        return new SeasonSummaryResult
+        {
+            GardenId = gardenId,
+            Year = year,
+            ExpensesByCategory = expenseTotals,
+            TotalExpenses = totalExpenses,
+            HarvestLines = harvestLines,
+            TotalHarvestValue = totalHarvestValue,
+            WaterAttribution = waterAttribution,
+            NetCost = totalExpenses + waterAttribution - totalHarvestValue
+        };
+    }
+
+    public async Task<IEnumerable<WaterAttributionResult>> GetWaterAttributionAsync(int userId, int? year)
+    {
+        var bills = (await waterBillRepository.GetByUserAsync(userId, year)).ToList();
+
+        return bills
+            .GroupBy(b => b.Year)
+            .Select(g => BuildWaterAttributionResult(g.Key, g.ToList()))
+            .OrderByDescending(r => r.Year);
+    }
+
+    public async Task<IEnumerable<YearSummaryResult>?> GetYearOverYearAsync(int gardenId, int userId)
+    {
+        var garden = await gardenRepository.GetByIdAsync(gardenId);
+        if (garden?.UserId != userId) return null;
+
+        var years = await reportRepository.GetSeasonYearsAsync(gardenId);
+        var allWaterBills = (await waterBillRepository.GetByUserAsync(userId)).ToList();
+
+        var results = new List<YearSummaryResult>();
+        foreach (var year in years)
+        {
+            var monthlyExpenses = (await reportRepository.GetMonthlyExpenseTotalsAsync(gardenId, year))
+                .ToDictionary(m => m.Month, m => m.Total);
+            var monthlyHarvests = (await reportRepository.GetMonthlyHarvestValueTotalsAsync(gardenId, year))
+                .ToDictionary(m => m.Month, m => m.Total);
+            var yearBills = allWaterBills.Where(b => b.Year == year).ToList();
+            var monthlyWater = ComputeMonthlyWaterAttribution(yearBills);
+
+            var allMonths = monthlyExpenses.Keys
+                .Union(monthlyHarvests.Keys)
+                .Union(monthlyWater.Keys)
+                .OrderBy(m => m);
+
+            var months = allMonths.Select(m =>
+            {
+                var expenses = monthlyExpenses.GetValueOrDefault(m);
+                var harvests = monthlyHarvests.GetValueOrDefault(m);
+                var water = monthlyWater.GetValueOrDefault(m);
+                return new MonthSummaryResult
+                {
+                    Month = m,
+                    TotalExpenses = expenses,
+                    TotalHarvestValue = harvests,
+                    WaterAttribution = water,
+                    NetCost = expenses + water - harvests
+                };
+            }).ToList();
+
+            var totalExpenses = months.Sum(m => m.TotalExpenses);
+            var totalHarvestValue = months.Sum(m => m.TotalHarvestValue);
+            var totalWater = months.Sum(m => m.WaterAttribution);
+
+            results.Add(new YearSummaryResult
+            {
+                Year = year,
+                Months = months,
+                TotalExpenses = totalExpenses,
+                TotalHarvestValue = totalHarvestValue,
+                WaterAttribution = totalWater,
+                NetCost = totalExpenses + totalWater - totalHarvestValue
+            });
+        }
+
+        return results;
+    }
+
+    private static Dictionary<int, decimal> ComputeMonthlyWaterAttribution(List<WaterBill> bills)
+    {
+        var baselineMonths = bills.Where(b => !b.IsGardenActive).ToList();
+        if (baselineMonths.Count == 0) return [];
+
+        var baselineMonthlyCost = baselineMonths.Average(b => b.TotalCost);
+        return bills
+            .Where(b => b.IsGardenActive)
+            .ToDictionary(b => b.Month, b => Math.Max(0, b.TotalCost - baselineMonthlyCost));
+    }
+
+    private static decimal ComputeWaterAttributionTotal(List<WaterBill> bills) =>
+        ComputeMonthlyWaterAttribution(bills).Values.Sum();
+
+    private static WaterAttributionResult BuildWaterAttributionResult(int year, List<WaterBill> bills)
+    {
+        var baselineMonths = bills.Where(b => !b.IsGardenActive).ToList();
+        var activeMonths = bills.Where(b => b.IsGardenActive).ToList();
+
+        decimal? baselineMonthlyCost = baselineMonths.Count > 0 ? baselineMonths.Average(b => b.TotalCost) : null;
+        decimal? baselineMonthlyGallons = baselineMonths.Count > 0 ? baselineMonths.Average(b => b.UsageGallons) : null;
+
+        var monthDetails = activeMonths.Select(b => new WaterAttributionMonthResult
+        {
+            Month = b.Month,
+            UsageGallons = b.UsageGallons,
+            TotalCost = b.TotalCost,
+            AttributedCost = baselineMonthlyCost.HasValue ? Math.Max(0, b.TotalCost - baselineMonthlyCost.Value) : null,
+            AttributedGallons = baselineMonthlyGallons.HasValue ? Math.Max(0, b.UsageGallons - baselineMonthlyGallons.Value) : null
+        }).ToList();
+
+        return new WaterAttributionResult
+        {
+            Year = year,
+            BaselineMonthlyCost = baselineMonthlyCost,
+            BaselineMonthlyGallons = baselineMonthlyGallons,
+            ActiveMonths = monthDetails,
+            TotalAttributedCost = monthDetails.Sum(m => m.AttributedCost ?? 0),
+            TotalAttributedGallons = monthDetails.Sum(m => m.AttributedGallons ?? 0)
+        };
+    }
+}

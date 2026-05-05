@@ -1,0 +1,60 @@
+using Dapper;
+using GardenTracker.Core.Entities;
+using GardenTracker.Core.Interfaces.Repositories;
+
+namespace GardenTracker.Data.Repositories;
+
+public class PlantingRepository(IConnectionFactory connectionFactory) : IPlantingRepository
+{
+    public async Task<IEnumerable<BedPlanting>> GetBySeasonAsync(int gardenId, int year, int? bedId = null, int? plantTypeId = null)
+    {
+        using var conn = connectionFactory.CreateConnection();
+        var sql = """
+            SELECT bp.* FROM BedPlantings bp
+            INNER JOIN Seasons s ON bp.SeasonId = s.Id
+            INNER JOIN PlantVarieties pv ON bp.PlantVarietyId = pv.Id
+            WHERE s.GardenId = @GardenId AND s.Year = @Year
+              AND (@BedId IS NULL OR bp.BedId = @BedId)
+              AND (@PlantTypeId IS NULL OR pv.PlantTypeId = @PlantTypeId)
+            """;
+        return await conn.QueryAsync<BedPlanting>(sql, new { GardenId = gardenId, Year = year, BedId = bedId, PlantTypeId = plantTypeId });
+    }
+
+    public async Task<BedPlanting?> GetByIdAsync(int id)
+    {
+        using var conn = connectionFactory.CreateConnection();
+        return await conn.QuerySingleOrDefaultAsync<BedPlanting>(
+            "SELECT * FROM BedPlantings WHERE Id = @Id", new { Id = id });
+    }
+
+    public async Task<int> CreateAsync(BedPlanting planting)
+    {
+        using var conn = connectionFactory.CreateConnection();
+        return await conn.ExecuteScalarAsync<int>(
+            """
+            INSERT INTO BedPlantings (BedId, SeasonId, PlantVarietyId, SupplierId, StartMethod, Quantity, TotalCost, SourceHarvestId, Notes)
+            OUTPUT INSERTED.Id
+            VALUES (@BedId, @SeasonId, @PlantVarietyId, @SupplierId, @StartMethod, @Quantity, @TotalCost, @SourceHarvestId, @Notes)
+            """,
+            planting);
+    }
+
+    public async Task UpdateAsync(BedPlanting planting)
+    {
+        using var conn = connectionFactory.CreateConnection();
+        await conn.ExecuteAsync(
+            """
+            UPDATE BedPlantings
+            SET SupplierId = @SupplierId, StartMethod = @StartMethod, Quantity = @Quantity,
+                TotalCost = @TotalCost, SourceHarvestId = @SourceHarvestId, Notes = @Notes
+            WHERE Id = @Id
+            """,
+            planting);
+    }
+
+    public async Task DeleteAsync(int id)
+    {
+        using var conn = connectionFactory.CreateConnection();
+        await conn.ExecuteAsync("DELETE FROM BedPlantings WHERE Id = @Id", new { Id = id });
+    }
+}

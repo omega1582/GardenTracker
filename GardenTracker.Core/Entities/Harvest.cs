@@ -1,0 +1,20 @@
+using GardenTracker.Core.Enums;
+
+namespace GardenTracker.Core.Entities;
+
+public class Harvest
+{
+    public int Id { get; set; }
+    public int BedId { get; set; }
+    public int SeasonId { get; set; }
+    public int PlantVarietyId { get; set; }
+    public decimal Quantity { get; set; }
+    public HarvestUnit Unit { get; set; }
+    public DateOnly HarvestDate { get; set; }
+    public string? Notes { get; set; }
+
+    public RaisedBed Bed { get; set; } = null!;
+    public Season Season { get; set; } = null!;
+    public PlantVariety PlantVariety { get; set; } = null!;
+    public ICollection<BedPlanting> SeedSavedPlantings { get; set; } = [];
+}
