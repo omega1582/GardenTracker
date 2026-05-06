@@ -11,6 +11,7 @@ import RegisterPage from '@/features/auth/RegisterPage'
 import DashboardPage from '@/pages/DashboardPage'
 import GardensPage from '@/features/gardens/GardensPage'
 import GardenDetailPage from '@/features/gardens/GardenDetailPage'
+import PlantsPage from '@/features/plants/PlantsPage'
 import './index.css'
 
 createRoot(document.getElementById('root')!).render(
@@ -29,6 +30,7 @@ createRoot(document.getElementById('root')!).render(
                 <Route index element={<DashboardPage />} />
                 <Route path="gardens" element={<GardensPage />} />
                 <Route path="gardens/:gardenId" element={<GardenDetailPage />} />
+                <Route path="plants" element={<PlantsPage />} />
                 <Route path="water-bills" element={<div>Water Bills (coming soon)</div>} />
                 <Route path="reports" element={<div>Reports (coming soon)</div>} />
               </Route>
