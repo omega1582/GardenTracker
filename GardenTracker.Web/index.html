@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Garden Tracker</title>
+    <!-- Runtime env injection: overwritten by docker-entrypoint.sh in containers,
+         falls back to empty object for local dev (Vite uses import.meta.env instead) -->
+    <script src="/env.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
