@@ -8,7 +8,7 @@ public class GardenTrackerDbContext(DbContextOptions<GardenTrackerDbContext> opt
 {
     public DbSet<User> Users => Set<User>();
     public DbSet<Garden> Gardens => Set<Garden>();
-    public DbSet<RaisedBed> RaisedBeds => Set<RaisedBed>();
+    public DbSet<Bed> Beds => Set<Bed>();
     public DbSet<Season> Seasons => Set<Season>();
     public DbSet<Supplier> Suppliers => Set<Supplier>();
     public DbSet<PlantType> PlantTypes => Set<PlantType>();
@@ -23,7 +23,7 @@ public class GardenTrackerDbContext(DbContextOptions<GardenTrackerDbContext> opt
     {
         modelBuilder.ApplyConfiguration(new UserConfiguration());
         modelBuilder.ApplyConfiguration(new GardenConfiguration());
-        modelBuilder.ApplyConfiguration(new RaisedBedConfiguration());
+        modelBuilder.ApplyConfiguration(new BedConfiguration());
         modelBuilder.ApplyConfiguration(new SeasonConfiguration());
         modelBuilder.ApplyConfiguration(new SupplierConfiguration());
         modelBuilder.ApplyConfiguration(new PlantTypeConfiguration());

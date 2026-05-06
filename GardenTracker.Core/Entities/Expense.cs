@@ -14,6 +14,6 @@ public class Expense
     public DateOnly ExpenseDate { get; set; }
 
     public Season Season { get; set; } = null!;
-    public RaisedBed? Bed { get; set; }
+    public Bed? Bed { get; set; }
     public Supplier? Supplier { get; set; }
 }

@@ -1,47 +1,55 @@
 using GardenTracker.Core.Entities;
 using GardenTracker.Core.Interfaces.Repositories;
 using GardenTracker.Core.Interfaces.Services;
+using Microsoft.Extensions.Logging;
 
 namespace GardenTracker.Services;
 
-public class RaisedBedService(IRaisedBedRepository bedRepository, IGardenRepository gardenRepository) : IRaisedBedService
+public class BedService(IBedRepository bedRepository, IGardenRepository gardenRepository, ILogger<BedService> logger) : IBedService
 {
-    public async Task<IEnumerable<RaisedBed>> GetByGardenAsync(int gardenId, int userId)
+    public async Task<IEnumerable<Bed>> GetByGardenAsync(int gardenId, int userId)
     {
         var garden = await gardenRepository.GetByIdAsync(gardenId);
-        if (garden?.UserId != userId) return [];
+        if (garden?.UserId != userId)
+        {
+            logger.LogInformation("Beds request for garden {GardenId} denied — not owned by user {UserId}", gardenId, userId);
+            return [];
+        }
         return await bedRepository.GetByGardenAsync(gardenId);
     }
 
-    public async Task<RaisedBed?> GetByIdAsync(int id, int userId)
+    public async Task<Bed?> GetByIdAsync(int id, int userId)
     {
         var bed = await bedRepository.GetByIdAsync(id);
         if (bed == null) return null;
         var garden = await gardenRepository.GetByIdAsync(bed.GardenId);
-        return garden?.UserId == userId ? bed : null;
+        if (garden?.UserId != userId)
+        {
+            logger.LogInformation("Bed {BedId} access denied — not owned by user {UserId}", id, userId);
+            return null;
+        }
+        return bed;
     }
 
-    public async Task<RaisedBed> CreateAsync(int gardenId, int userId, RaisedBed bed)
+    public async Task<Bed> CreateAsync(int gardenId, int userId, Bed bed)
     {
         bed.GardenId = gardenId;
         bed.Id = await bedRepository.CreateAsync(bed);
+        logger.LogInformation("Bed {BedId} created in garden {GardenId} by user {UserId}", bed.Id, gardenId, userId);
         return bed;
     }
 
     public async Task<bool> UpdateAsync(int id, int userId, string name, string? material, int expectedLifespanYears, string? notes)
     {
         var bed = await GetByIdAsync(id, userId);
-        if (bed == null) return false;
+        if (bed == null)
+        {
+            logger.LogInformation("Bed {BedId} update failed — not found or not owned by user {UserId}", id, userId);
+            return false;
+        }
         bed.Name = name; bed.Material = material; bed.ExpectedLifespanYears = expectedLifespanYears; bed.Notes = notes;
         await bedRepository.UpdateAsync(bed);
-        return true;
-    }
-
-    public async Task<bool> RetireAsync(int id, int userId, DateOnly retiredDate)
-    {
-        var bed = await GetByIdAsync(id, userId);
-        if (bed == null) return false;
-        await bedRepository.RetireAsync(id, retiredDate);
+        logger.LogInformation("Bed {BedId} updated by user {UserId}", id, userId);
         return true;
     }
 }

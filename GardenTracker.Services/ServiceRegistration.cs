@@ -10,7 +10,7 @@ public static class ServiceRegistration
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IGardenService, GardenService>();
         services.AddScoped<ISeasonService, SeasonService>();
-        services.AddScoped<IRaisedBedService, RaisedBedService>();
+        services.AddScoped<IBedService, BedService>();
         services.AddScoped<IPlantTypeService, PlantTypeService>();
         services.AddScoped<IPlantVarietyService, PlantVarietyService>();
         services.AddScoped<ISupplierService, SupplierService>();

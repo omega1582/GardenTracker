@@ -1,9 +1,11 @@
+using Dapper;
 using GardenTracker.Core.Interfaces.Repositories;
 using GardenTracker.Data.Context;
 using GardenTracker.Data.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System.Data;
 
 namespace GardenTracker.Data;
 
@@ -11,6 +13,8 @@ public static class ServiceRegistration
 {
     public static IServiceCollection AddDataServices(this IServiceCollection services, IConfiguration configuration)
     {
+        SqlMapper.AddTypeHandler(new DateOnlyTypeHandler());
+
         services.AddDbContext<GardenTrackerDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
@@ -19,7 +23,7 @@ public static class ServiceRegistration
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IGardenRepository, GardenRepository>();
         services.AddScoped<ISeasonRepository, SeasonRepository>();
-        services.AddScoped<IRaisedBedRepository, RaisedBedRepository>();
+        services.AddScoped<IBedRepository, BedRepository>();
         services.AddScoped<IPlantTypeRepository, PlantTypeRepository>();
         services.AddScoped<IPlantVarietyRepository, PlantVarietyRepository>();
         services.AddScoped<ISupplierRepository, SupplierRepository>();

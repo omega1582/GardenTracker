@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace GardenTracker.Api.Controllers;
 
 [Route("api/v1/gardens/{gardenId:int}/beds")]
-public class BedsController(IRaisedBedService bedService) : ApiControllerBase
+public class BedsController(IBedService bedService) : ApiControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<IEnumerable<BedResponse>>> GetAll(int gardenId)
@@ -26,7 +26,7 @@ public class BedsController(IRaisedBedService bedService) : ApiControllerBase
     [HttpPost]
     public async Task<ActionResult<BedResponse>> Create(int gardenId, CreateBedRequest request)
     {
-        var bed = new RaisedBed
+        var bed = new Bed
         {
             Name = request.Name, LengthFt = request.LengthFt, WidthFt = request.WidthFt,
             DepthIn = request.DepthIn, Material = request.Material,
@@ -44,18 +44,11 @@ public class BedsController(IRaisedBedService bedService) : ApiControllerBase
         return updated ? NoContent() : NotFound();
     }
 
-    [HttpPut("{id:int}/retire")]
-    public async Task<IActionResult> Retire(int gardenId, int id, RetireBedRequest request)
-    {
-        var retired = await bedService.RetireAsync(id, CurrentUserId, request.RetiredDate);
-        return retired ? NoContent() : NotFound();
-    }
-
-    private static BedResponse Map(RaisedBed b) => new()
+    private static BedResponse Map(Bed b) => new()
     {
         Id = b.Id, GardenId = b.GardenId, Name = b.Name, LengthFt = b.LengthFt,
         WidthFt = b.WidthFt, DepthIn = b.DepthIn, Material = b.Material,
         ExpectedLifespanYears = b.ExpectedLifespanYears, InstalledDate = b.InstalledDate,
-        RetiredDate = b.RetiredDate, Notes = b.Notes
+        Notes = b.Notes
     };
 }

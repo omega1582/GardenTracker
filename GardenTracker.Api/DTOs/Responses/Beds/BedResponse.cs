@@ -11,7 +11,5 @@ public class BedResponse
     public string? Material { get; set; }
     public int ExpectedLifespanYears { get; set; }
     public DateOnly InstalledDate { get; set; }
-    public DateOnly? RetiredDate { get; set; }
     public string? Notes { get; set; }
-    public bool IsActive => RetiredDate == null;
 }

@@ -1,6 +1,6 @@
 namespace GardenTracker.Core.Entities;
 
-public class RaisedBed
+public class Bed
 {
     public int Id { get; set; }
     public int GardenId { get; set; }
@@ -11,7 +11,6 @@ public class RaisedBed
     public string? Material { get; set; }
     public int ExpectedLifespanYears { get; set; } = 10;
     public DateOnly InstalledDate { get; set; }
-    public DateOnly? RetiredDate { get; set; }
     public string? Notes { get; set; }
 
     public Garden Garden { get; set; } = null!;

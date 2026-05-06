@@ -4,6 +4,7 @@ using GardenTracker.Data.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GardenTracker.Data.Migrations
 {
     [DbContext(typeof(GardenTrackerDbContext))]
-    partial class GardenTrackerDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260505204721_RemoveRetiredDateFromBeds")]
+    partial class RemoveRetiredDateFromBeds
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,54 +24,6 @@ namespace GardenTracker.Data.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("GardenTracker.Core.Entities.Bed", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<decimal>("DepthIn")
-                        .HasPrecision(6, 2)
-                        .HasColumnType("decimal(6,2)");
-
-                    b.Property<int>("ExpectedLifespanYears")
-                        .HasColumnType("int");
-
-                    b.Property<int>("GardenId")
-                        .HasColumnType("int");
-
-                    b.Property<DateOnly>("InstalledDate")
-                        .HasColumnType("date");
-
-                    b.Property<decimal>("LengthFt")
-                        .HasPrecision(6, 2)
-                        .HasColumnType("decimal(6,2)");
-
-                    b.Property<string>("Material")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("Notes")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("WidthFt")
-                        .HasPrecision(6, 2)
-                        .HasColumnType("decimal(6,2)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("GardenId");
-
-                    b.ToTable("Beds");
-                });
 
             modelBuilder.Entity("GardenTracker.Core.Entities.BedPlanting", b =>
                 {
@@ -324,6 +279,54 @@ namespace GardenTracker.Data.Migrations
                     b.ToTable("PlantVarieties");
                 });
 
+            modelBuilder.Entity("GardenTracker.Core.Entities.RaisedBed", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("DepthIn")
+                        .HasPrecision(6, 2)
+                        .HasColumnType("decimal(6,2)");
+
+                    b.Property<int>("ExpectedLifespanYears")
+                        .HasColumnType("int");
+
+                    b.Property<int>("GardenId")
+                        .HasColumnType("int");
+
+                    b.Property<DateOnly>("InstalledDate")
+                        .HasColumnType("date");
+
+                    b.Property<decimal>("LengthFt")
+                        .HasPrecision(6, 2)
+                        .HasColumnType("decimal(6,2)");
+
+                    b.Property<string>("Material")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("WidthFt")
+                        .HasPrecision(6, 2)
+                        .HasColumnType("decimal(6,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GardenId");
+
+                    b.ToTable("RaisedBeds");
+                });
+
             modelBuilder.Entity("GardenTracker.Core.Entities.Season", b =>
                 {
                     b.Property<int>("Id")
@@ -460,20 +463,9 @@ namespace GardenTracker.Data.Migrations
                     b.ToTable("WaterBills");
                 });
 
-            modelBuilder.Entity("GardenTracker.Core.Entities.Bed", b =>
-                {
-                    b.HasOne("GardenTracker.Core.Entities.Garden", "Garden")
-                        .WithMany("Beds")
-                        .HasForeignKey("GardenId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Garden");
-                });
-
             modelBuilder.Entity("GardenTracker.Core.Entities.BedPlanting", b =>
                 {
-                    b.HasOne("GardenTracker.Core.Entities.Bed", "Bed")
+                    b.HasOne("GardenTracker.Core.Entities.RaisedBed", "Bed")
                         .WithMany("Plantings")
                         .HasForeignKey("BedId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -514,7 +506,7 @@ namespace GardenTracker.Data.Migrations
 
             modelBuilder.Entity("GardenTracker.Core.Entities.Expense", b =>
                 {
-                    b.HasOne("GardenTracker.Core.Entities.Bed", "Bed")
+                    b.HasOne("GardenTracker.Core.Entities.RaisedBed", "Bed")
                         .WithMany("Expenses")
                         .HasForeignKey("BedId")
                         .OnDelete(DeleteBehavior.SetNull);
@@ -550,7 +542,7 @@ namespace GardenTracker.Data.Migrations
 
             modelBuilder.Entity("GardenTracker.Core.Entities.Harvest", b =>
                 {
-                    b.HasOne("GardenTracker.Core.Entities.Bed", "Bed")
+                    b.HasOne("GardenTracker.Core.Entities.RaisedBed", "Bed")
                         .WithMany("Harvests")
                         .HasForeignKey("BedId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -612,6 +604,17 @@ namespace GardenTracker.Data.Migrations
                     b.Navigation("PlantType");
                 });
 
+            modelBuilder.Entity("GardenTracker.Core.Entities.RaisedBed", b =>
+                {
+                    b.HasOne("GardenTracker.Core.Entities.Garden", "Garden")
+                        .WithMany("RaisedBeds")
+                        .HasForeignKey("GardenId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Garden");
+                });
+
             modelBuilder.Entity("GardenTracker.Core.Entities.Season", b =>
                 {
                     b.HasOne("GardenTracker.Core.Entities.Garden", "Garden")
@@ -634,18 +637,9 @@ namespace GardenTracker.Data.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("GardenTracker.Core.Entities.Bed", b =>
-                {
-                    b.Navigation("Expenses");
-
-                    b.Navigation("Harvests");
-
-                    b.Navigation("Plantings");
-                });
-
             modelBuilder.Entity("GardenTracker.Core.Entities.Garden", b =>
                 {
-                    b.Navigation("Beds");
+                    b.Navigation("RaisedBeds");
 
                     b.Navigation("Seasons");
                 });
@@ -667,6 +661,15 @@ namespace GardenTracker.Data.Migrations
                     b.Navigation("Harvests");
 
                     b.Navigation("MarketPrices");
+
+                    b.Navigation("Plantings");
+                });
+
+            modelBuilder.Entity("GardenTracker.Core.Entities.RaisedBed", b =>
+                {
+                    b.Navigation("Expenses");
+
+                    b.Navigation("Harvests");
 
                     b.Navigation("Plantings");
                 });

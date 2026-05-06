@@ -13,7 +13,7 @@ public class Harvest
     public DateOnly HarvestDate { get; set; }
     public string? Notes { get; set; }
 
-    public RaisedBed Bed { get; set; } = null!;
+    public Bed Bed { get; set; } = null!;
     public Season Season { get; set; } = null!;
     public PlantVariety PlantVariety { get; set; } = null!;
     public ICollection<BedPlanting> SeedSavedPlantings { get; set; } = [];

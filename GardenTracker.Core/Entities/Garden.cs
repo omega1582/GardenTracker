@@ -10,6 +10,6 @@ public class Garden
     public DateTime CreatedAt { get; set; }
 
     public User User { get; set; } = null!;
-    public ICollection<RaisedBed> RaisedBeds { get; set; } = [];
+    public ICollection<Bed> Beds { get; set; } = [];
     public ICollection<Season> Seasons { get; set; } = [];
 }
