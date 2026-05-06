@@ -6,11 +6,12 @@ using GardenTracker.Core.Entities;
 using GardenTracker.Core.Interfaces.Repositories;
 using GardenTracker.Core.Interfaces.Services;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 
 namespace GardenTracker.Services;
 
-public class AuthService(IUserRepository userRepository, IConfiguration configuration) : IAuthService
+public class AuthService(IUserRepository userRepository, IConfiguration configuration, ILogger<AuthService> logger) : IAuthService
 {
     private readonly string _jwtKey = configuration["Jwt:Key"]!;
     private readonly string _jwtIssuer = configuration["Jwt:Issuer"]!;
@@ -18,8 +19,14 @@ public class AuthService(IUserRepository userRepository, IConfiguration configur
 
     public async Task<AuthResult?> RegisterAsync(string email, string password, string displayName)
     {
+        logger.LogDebug("Registration attempt for email {Email}", email);
+
         var existing = await userRepository.GetByEmailAsync(email);
-        if (existing != null) return null;
+        if (existing != null)
+        {
+            logger.LogInformation("Registration failed — email already in use");
+            return null;
+        }
 
         var user = new User
         {
@@ -30,15 +37,22 @@ public class AuthService(IUserRepository userRepository, IConfiguration configur
         };
 
         user.Id = await userRepository.CreateAsync(user);
+        logger.LogInformation("User {UserId} registered successfully", user.Id);
         return await GenerateTokensAsync(user);
     }
 
     public async Task<AuthResult?> LoginAsync(string email, string password)
     {
+        logger.LogDebug("Login attempt for email {Email}", email);
+
         var user = await userRepository.GetByEmailAsync(email.ToLowerInvariant());
         if (user == null || !BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
+        {
+            logger.LogInformation("Login failed — invalid credentials");
             return null;
+        }
 
+        logger.LogInformation("User {UserId} logged in successfully", user.Id);
         return await GenerateTokensAsync(user);
     }
 
@@ -47,14 +61,19 @@ public class AuthService(IUserRepository userRepository, IConfiguration configur
         var tokenHash = HashToken(refreshToken);
         var user = await userRepository.GetByRefreshTokenAsync(tokenHash);
         if (user == null || user.RefreshTokenExpiry < DateTime.UtcNow)
+        {
+            logger.LogInformation("Token refresh failed — invalid or expired token");
             return null;
+        }
 
+        logger.LogInformation("Token refreshed for user {UserId}", user.Id);
         return await GenerateTokensAsync(user);
     }
 
     public async Task LogoutAsync(int userId)
     {
         await userRepository.UpdateRefreshTokenAsync(userId, null, null);
+        logger.LogInformation("User {UserId} logged out", userId);
     }
 
     private async Task<AuthResult> GenerateTokensAsync(User user)

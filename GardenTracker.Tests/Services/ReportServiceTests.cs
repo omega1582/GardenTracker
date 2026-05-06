@@ -4,6 +4,7 @@ using GardenTracker.Core.Enums;
 using GardenTracker.Core.Interfaces.Repositories;
 using GardenTracker.Core.Models.Reports;
 using GardenTracker.Services;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
 namespace GardenTracker.Tests.Services;
@@ -16,7 +17,7 @@ public class ReportServiceTests
     private readonly ReportService _sut;
 
     public ReportServiceTests() =>
-        _sut = new ReportService(_reportRepo.Object, _waterBillRepo.Object, _gardenRepo.Object);
+        _sut = new ReportService(_reportRepo.Object, _waterBillRepo.Object, _gardenRepo.Object, NullLogger<ReportService>.Instance);
 
     // --- GetSeasonSummaryAsync ---
 

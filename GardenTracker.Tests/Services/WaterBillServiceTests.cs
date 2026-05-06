@@ -2,6 +2,7 @@ using FluentAssertions;
 using GardenTracker.Core.Entities;
 using GardenTracker.Core.Interfaces.Repositories;
 using GardenTracker.Services;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
 namespace GardenTracker.Tests.Services;
@@ -11,7 +12,7 @@ public class WaterBillServiceTests
     private readonly Mock<IWaterBillRepository> _waterBillRepo = new();
     private readonly WaterBillService _sut;
 
-    public WaterBillServiceTests() => _sut = new WaterBillService(_waterBillRepo.Object);
+    public WaterBillServiceTests() => _sut = new WaterBillService(_waterBillRepo.Object, NullLogger<WaterBillService>.Instance);
 
     [Fact]
     public async Task GetByIdAsync_ReturnsBill_WhenUserOwnsIt()

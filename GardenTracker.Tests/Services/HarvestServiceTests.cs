@@ -3,6 +3,7 @@ using GardenTracker.Core.Entities;
 using GardenTracker.Core.Enums;
 using GardenTracker.Core.Interfaces.Repositories;
 using GardenTracker.Services;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
 namespace GardenTracker.Tests.Services;
@@ -15,7 +16,7 @@ public class HarvestServiceTests
     private readonly HarvestService _sut;
 
     public HarvestServiceTests() =>
-        _sut = new HarvestService(_harvestRepo.Object, _seasonRepo.Object, _gardenRepo.Object);
+        _sut = new HarvestService(_harvestRepo.Object, _seasonRepo.Object, _gardenRepo.Object, NullLogger<HarvestService>.Instance);
 
     private void SetupOwnership(Harvest harvest, int userId)
     {

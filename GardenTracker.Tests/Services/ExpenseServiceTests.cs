@@ -3,6 +3,7 @@ using GardenTracker.Core.Entities;
 using GardenTracker.Core.Enums;
 using GardenTracker.Core.Interfaces.Repositories;
 using GardenTracker.Services;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
 namespace GardenTracker.Tests.Services;
@@ -15,7 +16,7 @@ public class ExpenseServiceTests
     private readonly ExpenseService _sut;
 
     public ExpenseServiceTests() =>
-        _sut = new ExpenseService(_expenseRepo.Object, _seasonRepo.Object, _gardenRepo.Object);
+        _sut = new ExpenseService(_expenseRepo.Object, _seasonRepo.Object, _gardenRepo.Object, NullLogger<ExpenseService>.Instance);
 
     private void SetupOwnership(Expense expense, int userId)
     {

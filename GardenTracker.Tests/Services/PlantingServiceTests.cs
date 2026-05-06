@@ -3,6 +3,7 @@ using GardenTracker.Core.Entities;
 using GardenTracker.Core.Enums;
 using GardenTracker.Core.Interfaces.Repositories;
 using GardenTracker.Services;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
 namespace GardenTracker.Tests.Services;
@@ -15,7 +16,7 @@ public class PlantingServiceTests
     private readonly PlantingService _sut;
 
     public PlantingServiceTests() =>
-        _sut = new PlantingService(_plantingRepo.Object, _seasonRepo.Object, _gardenRepo.Object);
+        _sut = new PlantingService(_plantingRepo.Object, _seasonRepo.Object, _gardenRepo.Object, NullLogger<PlantingService>.Instance);
 
     private void SetupOwnership(BedPlanting planting, int userId)
     {

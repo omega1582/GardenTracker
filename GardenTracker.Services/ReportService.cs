@@ -2,18 +2,24 @@ using GardenTracker.Core.Entities;
 using GardenTracker.Core.Interfaces.Repositories;
 using GardenTracker.Core.Interfaces.Services;
 using GardenTracker.Core.Models.Reports;
+using Microsoft.Extensions.Logging;
 
 namespace GardenTracker.Services;
 
 public class ReportService(
     IReportRepository reportRepository,
     IWaterBillRepository waterBillRepository,
-    IGardenRepository gardenRepository) : IReportService
+    IGardenRepository gardenRepository,
+    ILogger<ReportService> logger) : IReportService
 {
     public async Task<SeasonSummaryResult?> GetSeasonSummaryAsync(int gardenId, int year, int userId)
     {
         var garden = await gardenRepository.GetByIdAsync(gardenId);
-        if (garden?.UserId != userId) return null;
+        if (garden?.UserId != userId)
+        {
+            logger.LogInformation("Season summary for garden {GardenId} year {Year} denied — not owned by user {UserId}", gardenId, year, userId);
+            return null;
+        }
 
         var expenseTotals = (await reportRepository.GetSeasonExpenseTotalsAsync(gardenId, year)).ToList();
         var harvestLines = (await reportRepository.GetSeasonHarvestValuesAsync(gardenId, year)).ToList();
@@ -24,6 +30,8 @@ public class ReportService(
             .Where(h => h.PricePerUnit.HasValue)
             .Sum(h => h.Quantity * h.PricePerUnit!.Value);
         var waterAttribution = ComputeWaterAttributionTotal(waterBills);
+
+        logger.LogInformation("Season summary generated for garden {GardenId} year {Year} — expenses {TotalExpenses:C}, harvest {TotalHarvestValue:C}", gardenId, year, totalExpenses, totalHarvestValue);
 
         return new SeasonSummaryResult
         {
@@ -41,6 +49,7 @@ public class ReportService(
     public async Task<IEnumerable<WaterAttributionResult>> GetWaterAttributionAsync(int userId, int? year)
     {
         var bills = (await waterBillRepository.GetByUserAsync(userId, year)).ToList();
+        logger.LogInformation("Water attribution report generated for user {UserId} — {BillCount} bills across {YearCount} year(s)", userId, bills.Count, bills.Select(b => b.Year).Distinct().Count());
 
         return bills
             .GroupBy(b => b.Year)
@@ -51,10 +60,15 @@ public class ReportService(
     public async Task<IEnumerable<YearSummaryResult>?> GetYearOverYearAsync(int gardenId, int userId)
     {
         var garden = await gardenRepository.GetByIdAsync(gardenId);
-        if (garden?.UserId != userId) return null;
+        if (garden?.UserId != userId)
+        {
+            logger.LogInformation("Year-over-year report for garden {GardenId} denied — not owned by user {UserId}", gardenId, userId);
+            return null;
+        }
 
-        var years = await reportRepository.GetSeasonYearsAsync(gardenId);
+        var years = (await reportRepository.GetSeasonYearsAsync(gardenId)).ToList();
         var allWaterBills = (await waterBillRepository.GetByUserAsync(userId)).ToList();
+        logger.LogInformation("Year-over-year report generated for garden {GardenId} — {YearCount} season(s)", gardenId, years.Count);
 
         var results = new List<YearSummaryResult>();
         foreach (var year in years)

@@ -2,6 +2,7 @@ using FluentAssertions;
 using GardenTracker.Core.Entities;
 using GardenTracker.Core.Interfaces.Repositories;
 using GardenTracker.Services;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
 namespace GardenTracker.Tests.Services;
@@ -11,7 +12,7 @@ public class GardenServiceTests
     private readonly Mock<IGardenRepository> _gardenRepo = new();
     private readonly GardenService _sut;
 
-    public GardenServiceTests() => _sut = new GardenService(_gardenRepo.Object);
+    public GardenServiceTests() => _sut = new GardenService(_gardenRepo.Object, NullLogger<GardenService>.Instance);
 
     [Fact]
     public async Task GetByIdAsync_ReturnsGarden_WhenUserOwnsIt()
