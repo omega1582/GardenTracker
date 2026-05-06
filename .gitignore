@@ -17,3 +17,18 @@ Thumbs.db
 # Environment overrides (keep appsettings.json, ignore local overrides)
 appsettings.Local.json
 appsettings.*.local.json
+
+# Docker environment secrets
+.env
+
+# Frontend
+GardenTracker.Web/node_modules/
+GardenTracker.Web/dist/
+GardenTracker.Web/.env.local
+
+# SSDT / SQL Server Data Tools generated files
+*.jfm
+*.dbmdl
+
+# Claude Code local settings (personal overrides)
+.claude/settings.local.json
