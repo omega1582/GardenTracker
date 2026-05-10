@@ -12,6 +12,7 @@ import DashboardPage from '@/pages/DashboardPage'
 import GardensPage from '@/features/gardens/GardensPage'
 import GardenDetailPage from '@/features/gardens/GardenDetailPage'
 import PlantsPage from '@/features/plants/PlantsPage'
+import InventoryPage from '@/features/inventory/InventoryPage'
 import './index.css'
 
 createRoot(document.getElementById('root')!).render(
@@ -31,6 +32,7 @@ createRoot(document.getElementById('root')!).render(
                 <Route path="gardens" element={<GardensPage />} />
                 <Route path="gardens/:gardenId" element={<GardenDetailPage />} />
                 <Route path="plants" element={<PlantsPage />} />
+                <Route path="inventory" element={<InventoryPage />} />
                 <Route path="water-bills" element={<div>Water Bills (coming soon)</div>} />
                 <Route path="reports" element={<div>Reports (coming soon)</div>} />
               </Route>

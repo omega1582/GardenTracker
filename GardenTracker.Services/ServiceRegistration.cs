@@ -20,6 +20,7 @@ public static class ServiceRegistration
         services.AddScoped<IMarketPriceService, MarketPriceService>();
         services.AddScoped<IWaterBillService, WaterBillService>();
         services.AddScoped<IReportService, ReportService>();
+        services.AddScoped<IInventoryService, InventoryService>();
 
         return services;
     }

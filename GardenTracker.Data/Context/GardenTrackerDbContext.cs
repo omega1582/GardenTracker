@@ -18,6 +18,7 @@ public class GardenTrackerDbContext(DbContextOptions<GardenTrackerDbContext> opt
     public DbSet<Expense> Expenses => Set<Expense>();
     public DbSet<MarketPrice> MarketPrices => Set<MarketPrice>();
     public DbSet<WaterBill> WaterBills => Set<WaterBill>();
+    public DbSet<InventoryItem> InventoryItems => Set<InventoryItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -33,5 +34,6 @@ public class GardenTrackerDbContext(DbContextOptions<GardenTrackerDbContext> opt
         modelBuilder.ApplyConfiguration(new ExpenseConfiguration());
         modelBuilder.ApplyConfiguration(new MarketPriceConfiguration());
         modelBuilder.ApplyConfiguration(new WaterBillConfiguration());
+        modelBuilder.ApplyConfiguration(new InventoryItemConfiguration());
     }
 }

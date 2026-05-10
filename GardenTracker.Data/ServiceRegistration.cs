@@ -33,6 +33,7 @@ public static class ServiceRegistration
         services.AddScoped<IMarketPriceRepository, MarketPriceRepository>();
         services.AddScoped<IWaterBillRepository, WaterBillRepository>();
         services.AddScoped<IReportRepository, ReportRepository>();
+        services.AddScoped<IInventoryRepository, InventoryRepository>();
 
         return services;
     }

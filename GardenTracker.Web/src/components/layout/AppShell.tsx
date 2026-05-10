@@ -25,6 +25,9 @@ export default function AppShell() {
             <Link to="/plants" className="text-sm text-muted-foreground hover:text-foreground">
               Plants
             </Link>
+            <Link to="/inventory" className="text-sm text-muted-foreground hover:text-foreground">
+              Inventory
+            </Link>
             <Link to="/water-bills" className="text-sm text-muted-foreground hover:text-foreground">
               Water Bills
             </Link>
