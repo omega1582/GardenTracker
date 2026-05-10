@@ -25,4 +25,9 @@ public class CreatePlantingRequest
     public int? SourceHarvestId { get; set; }
 
     public string? Notes { get; set; }
+
+    public int? InventoryItemId { get; set; }
+
+    [Range(0, 100000)]
+    public int? QuantityUsedFromInventory { get; set; }
 }

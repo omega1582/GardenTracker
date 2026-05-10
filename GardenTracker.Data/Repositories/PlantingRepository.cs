@@ -10,12 +10,21 @@ public class PlantingRepository(IConnectionFactory connectionFactory) : IPlantin
     {
         using var conn = connectionFactory.CreateConnection();
         var sql = """
-            SELECT bp.* FROM BedPlantings bp
+            SELECT bp.*,
+                   b.Name AS BedName,
+                   pv.Name AS PlantVarietyName,
+                   pt.Name AS PlantTypeName,
+                   s2.Name AS SupplierName
+            FROM BedPlantings bp
             INNER JOIN Seasons s ON bp.SeasonId = s.Id
+            INNER JOIN Beds b ON bp.BedId = b.Id
             INNER JOIN PlantVarieties pv ON bp.PlantVarietyId = pv.Id
+            INNER JOIN PlantTypes pt ON pv.PlantTypeId = pt.Id
+            LEFT JOIN Suppliers s2 ON bp.SupplierId = s2.Id
             WHERE s.GardenId = @GardenId AND s.Year = @Year
               AND (@BedId IS NULL OR bp.BedId = @BedId)
               AND (@PlantTypeId IS NULL OR pv.PlantTypeId = @PlantTypeId)
+            ORDER BY pt.Name, pv.Name
             """;
         return await conn.QueryAsync<BedPlanting>(sql, new { GardenId = gardenId, Year = year, BedId = bedId, PlantTypeId = plantTypeId });
     }
@@ -32,9 +41,9 @@ public class PlantingRepository(IConnectionFactory connectionFactory) : IPlantin
         using var conn = connectionFactory.CreateConnection();
         return await conn.ExecuteScalarAsync<int>(
             """
-            INSERT INTO BedPlantings (BedId, SeasonId, PlantVarietyId, SupplierId, StartMethod, Quantity, TotalCost, SourceHarvestId, Notes)
+            INSERT INTO BedPlantings (BedId, SeasonId, PlantVarietyId, SupplierId, StartMethod, Quantity, TotalCost, SourceHarvestId, Notes, InventoryItemId, QuantityUsedFromInventory)
             OUTPUT INSERTED.Id
-            VALUES (@BedId, @SeasonId, @PlantVarietyId, @SupplierId, @StartMethod, @Quantity, @TotalCost, @SourceHarvestId, @Notes)
+            VALUES (@BedId, @SeasonId, @PlantVarietyId, @SupplierId, @StartMethod, @Quantity, @TotalCost, @SourceHarvestId, @Notes, @InventoryItemId, @QuantityUsedFromInventory)
             """,
             planting);
     }
@@ -46,7 +55,8 @@ public class PlantingRepository(IConnectionFactory connectionFactory) : IPlantin
             """
             UPDATE BedPlantings
             SET SupplierId = @SupplierId, StartMethod = @StartMethod, Quantity = @Quantity,
-                TotalCost = @TotalCost, SourceHarvestId = @SourceHarvestId, Notes = @Notes
+                TotalCost = @TotalCost, SourceHarvestId = @SourceHarvestId, Notes = @Notes,
+                InventoryItemId = @InventoryItemId, QuantityUsedFromInventory = @QuantityUsedFromInventory
             WHERE Id = @Id
             """,
             planting);

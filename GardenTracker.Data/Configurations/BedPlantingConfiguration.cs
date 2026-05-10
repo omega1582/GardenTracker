@@ -9,6 +9,11 @@ public class BedPlantingConfiguration : IEntityTypeConfiguration<BedPlanting>
     public void Configure(EntityTypeBuilder<BedPlanting> builder)
     {
         builder.HasKey(p => p.Id);
+
+        builder.Ignore(p => p.BedName);
+        builder.Ignore(p => p.PlantVarietyName);
+        builder.Ignore(p => p.PlantTypeName);
+        builder.Ignore(p => p.SupplierName);
         builder.Property(p => p.TotalCost).HasPrecision(10, 2);
         builder.Property(p => p.StartMethod).IsRequired();
 
@@ -36,6 +41,12 @@ public class BedPlantingConfiguration : IEntityTypeConfiguration<BedPlanting>
         builder.HasOne(p => p.SourceHarvest)
             .WithMany(h => h.SeedSavedPlantings)
             .HasForeignKey(p => p.SourceHarvestId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne(p => p.InventoryItem)
+            .WithMany(i => i.Plantings)
+            .HasForeignKey(p => p.InventoryItemId)
             .IsRequired(false)
             .OnDelete(DeleteBehavior.SetNull);
     }

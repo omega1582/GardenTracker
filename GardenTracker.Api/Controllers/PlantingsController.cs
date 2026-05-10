@@ -32,9 +32,10 @@ public class PlantingsController(IPlantingService plantingService) : ApiControll
             BedId = request.BedId, PlantVarietyId = request.PlantVarietyId,
             SupplierId = request.SupplierId, StartMethod = request.StartMethod,
             Quantity = request.Quantity, TotalCost = request.TotalCost,
-            SourceHarvestId = request.SourceHarvestId, Notes = request.Notes
+            SourceHarvestId = request.SourceHarvestId, Notes = request.Notes,
+            InventoryItemId = request.InventoryItemId
         };
-        var created = await plantingService.CreateAsync(gardenId, year, CurrentUserId, planting);
+        var created = await plantingService.CreateAsync(gardenId, year, CurrentUserId, planting, request.QuantityUsedFromInventory);
         return CreatedAtAction(nameof(GetById), new { gardenId, year, id = created.Id }, Map(created));
     }
 
@@ -42,7 +43,8 @@ public class PlantingsController(IPlantingService plantingService) : ApiControll
     public async Task<IActionResult> Update(int gardenId, int year, int id, UpdatePlantingRequest request)
     {
         var updated = await plantingService.UpdateAsync(id, CurrentUserId, request.SupplierId,
-            request.StartMethod, request.Quantity, request.TotalCost, request.SourceHarvestId, request.Notes);
+            request.StartMethod, request.Quantity, request.TotalCost, request.SourceHarvestId, request.Notes,
+            request.InventoryItemId, request.QuantityUsedFromInventory);
         return updated ? NoContent() : NotFound();
     }
 
@@ -55,11 +57,13 @@ public class PlantingsController(IPlantingService plantingService) : ApiControll
 
     private static PlantingResponse Map(BedPlanting p) => new()
     {
-        Id = p.Id, BedId = p.BedId, SeasonId = p.SeasonId, PlantVarietyId = p.PlantVarietyId,
-        PlantVarietyName = p.PlantVariety?.Name ?? string.Empty,
-        PlantTypeName = p.PlantVariety?.PlantType?.Name ?? string.Empty,
-        SupplierId = p.SupplierId, SupplierName = p.Supplier?.Name,
+        Id = p.Id, BedId = p.BedId, BedName = p.BedName ?? string.Empty,
+        SeasonId = p.SeasonId, PlantVarietyId = p.PlantVarietyId,
+        PlantVarietyName = p.PlantVarietyName ?? string.Empty,
+        PlantTypeName = p.PlantTypeName ?? string.Empty,
+        SupplierId = p.SupplierId, SupplierName = p.SupplierName,
         StartMethod = p.StartMethod, Quantity = p.Quantity, TotalCost = p.TotalCost,
-        SourceHarvestId = p.SourceHarvestId, Notes = p.Notes
+        SourceHarvestId = p.SourceHarvestId, Notes = p.Notes,
+        InventoryItemId = p.InventoryItemId, QuantityUsedFromInventory = p.QuantityUsedFromInventory
     };
 }

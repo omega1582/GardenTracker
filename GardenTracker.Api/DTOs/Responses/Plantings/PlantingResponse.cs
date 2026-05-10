@@ -6,6 +6,7 @@ public class PlantingResponse
 {
     public int Id { get; set; }
     public int BedId { get; set; }
+    public string BedName { get; set; } = string.Empty;
     public int SeasonId { get; set; }
     public int PlantVarietyId { get; set; }
     public string PlantVarietyName { get; set; } = string.Empty;
@@ -17,4 +18,6 @@ public class PlantingResponse
     public decimal TotalCost { get; set; }
     public int? SourceHarvestId { get; set; }
     public string? Notes { get; set; }
+    public int? InventoryItemId { get; set; }
+    public int? QuantityUsedFromInventory { get; set; }
 }
