@@ -60,6 +60,28 @@ public class ExpenseServiceTests
     }
 
     [Fact]
+    public async Task GetByIdAsync_ReturnsNull_WhenExpenseNotFound()
+    {
+        _expenseRepo.Setup(r => r.GetByIdAsync(99)).ReturnsAsync((Expense?)null);
+
+        var result = await _sut.GetByIdAsync(99, userId: 42);
+
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task CreateAsync_ThrowsInvalidOperationException_WhenSeasonDoesNotExist()
+    {
+        _seasonRepo.Setup(r => r.GetByYearAsync(1, 2025)).ReturnsAsync((Season?)null);
+
+        var act = async () => await _sut.CreateAsync(gardenId: 1, year: 2025, userId: 42,
+            new Expense { Category = ExpenseCategory.Seeds, Description = "test", Amount = 5m, ExpenseDate = new DateOnly(2025, 1, 1) });
+
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*No season found*");
+    }
+
+    [Fact]
     public async Task CreateAsync_AssignsSeasonId()
     {
         var season = new Season { Id = 10, GardenId = 1, Year = 2025 };
