@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GardenTracker.Api.Controllers;
 
+[Route("api/v1/inventory")]
 public class InventoryController(IInventoryService inventoryService) : ApiControllerBase
 {
     [HttpGet]
