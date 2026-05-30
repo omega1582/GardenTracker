@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GardenTracker.Api.Controllers;
 
+[Route("api/v1/water-bills")]
 public class WaterBillsController(IWaterBillService waterBillService) : ApiControllerBase
 {
     [HttpGet]
