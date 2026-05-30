@@ -49,10 +49,16 @@ export default function RegisterPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="w-full max-w-sm space-y-6 rounded-lg border border-border bg-card p-8 shadow-sm">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Garden Tracker</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Create an account</p>
+      <div className="w-full max-w-sm space-y-6 border border-border bg-card p-8 shadow-sm" style={{ borderRadius: '0.2rem' }}>
+        <div className="text-center space-y-1 pb-2 border-b border-border">
+          <div className="flex justify-center mb-3">
+            <svg width="32" height="32" viewBox="0 0 20 20" fill="none" aria-hidden>
+              <path d="M10 18 C10 18 3 14 3 7 C3 4 6 2 10 2 C14 2 17 4 17 7 C17 14 10 18 10 18Z" fill="oklch(0.62 0.140 43)" opacity="0.9"/>
+              <path d="M10 18 L10 8" stroke="oklch(0.30 0.090 155)" strokeWidth="1" strokeLinecap="round"/>
+            </svg>
+          </div>
+          <h1 className="heading-serif text-3xl font-semibold italic" style={{ color: 'oklch(0.30 0.090 155)' }}>Garden Tracker</h1>
+          <p className="text-sm text-muted-foreground">Create an account</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
