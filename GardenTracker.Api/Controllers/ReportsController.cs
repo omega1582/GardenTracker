@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GardenTracker.Api.Controllers;
 
+[Route("api/v1/reports")]
 public class ReportsController(IReportService reportService) : ApiControllerBase
 {
     [HttpGet("gardens/{gardenId:int}/season/{year:int}")]
