@@ -154,6 +154,17 @@ public class InventoryServiceTests
     // ── AdjustRemainingAsync ────────────────────────────────────────────────
 
     [Fact]
+    public async Task AdjustRemainingAsync_ReturnsFalse_WhenUserDoesNotOwnItem()
+    {
+        _repo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(MakeItem(userId: 42));
+
+        var result = await _sut.AdjustRemainingAsync(1, userId: 99, newRemaining: 10);
+
+        result.Should().BeFalse();
+        _repo.Verify(r => r.UpdateRemainingQuantityAsync(It.IsAny<int>(), It.IsAny<int>()), Times.Never);
+    }
+
+    [Fact]
     public async Task AdjustRemainingAsync_ReturnsFalse_WhenItemNotFound()
     {
         _repo.Setup(r => r.GetByIdAsync(99)).ReturnsAsync((InventoryItem?)null);

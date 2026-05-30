@@ -15,6 +15,28 @@ public class WaterBillServiceTests
     public WaterBillServiceTests() => _sut = new WaterBillService(_waterBillRepo.Object, NullLogger<WaterBillService>.Instance);
 
     [Fact]
+    public async Task GetAllAsync_PassesThroughUserIdAndYear()
+    {
+        var bills = new[] { new WaterBill { Id = 1, UserId = 42, Year = 2025, Month = 6 } };
+        _waterBillRepo.Setup(r => r.GetByUserAsync(42, 2025)).ReturnsAsync(bills);
+
+        var result = await _sut.GetAllAsync(userId: 42, year: 2025);
+
+        result.Should().HaveCount(1);
+        _waterBillRepo.Verify(r => r.GetByUserAsync(42, 2025), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetAllAsync_PassesNullYear_WhenYearNotSpecified()
+    {
+        _waterBillRepo.Setup(r => r.GetByUserAsync(42, null)).ReturnsAsync([]);
+
+        await _sut.GetAllAsync(userId: 42);
+
+        _waterBillRepo.Verify(r => r.GetByUserAsync(42, null), Times.Once);
+    }
+
+    [Fact]
     public async Task GetByIdAsync_ReturnsBill_WhenUserOwnsIt()
     {
         var bill = new WaterBill { Id = 1, UserId = 42, Year = 2025, Month = 6 };

@@ -72,6 +72,17 @@ public class GardenServiceTests
     }
 
     [Fact]
+    public async Task UpdateAsync_ReturnsFalse_WhenGardenNotFound()
+    {
+        _gardenRepo.Setup(r => r.GetByIdAsync(99)).ReturnsAsync((Garden?)null);
+
+        var result = await _sut.UpdateAsync(99, userId: 42, "Name", null, null);
+
+        result.Should().BeFalse();
+        _gardenRepo.Verify(r => r.UpdateAsync(It.IsAny<Garden>()), Times.Never);
+    }
+
+    [Fact]
     public async Task UpdateAsync_ReturnsFalse_WhenUserDoesNotOwnGarden()
     {
         var garden = new Garden { Id = 1, UserId = 42, Name = "Old Name" };
@@ -93,6 +104,17 @@ public class GardenServiceTests
 
         result.Should().BeTrue();
         _gardenRepo.Verify(r => r.DeleteAsync(1), Times.Once);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_ReturnsFalse_WhenGardenNotFound()
+    {
+        _gardenRepo.Setup(r => r.GetByIdAsync(99)).ReturnsAsync((Garden?)null);
+
+        var result = await _sut.DeleteAsync(99, userId: 42);
+
+        result.Should().BeFalse();
+        _gardenRepo.Verify(r => r.DeleteAsync(It.IsAny<int>()), Times.Never);
     }
 
     [Fact]
