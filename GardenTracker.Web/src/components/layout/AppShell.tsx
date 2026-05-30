@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/features/auth/AuthContext'
+import { toggleTheme, getCurrentTheme } from '@/lib/theme'
 
 const NAV_LINKS = [
   { to: '/gardens',    label: 'Gardens'    },
@@ -13,6 +15,7 @@ export default function AppShell() {
   const { signOut } = useAuth()
   const navigate = useNavigate()
   const { pathname } = useLocation()
+  const [theme, setTheme] = useState(getCurrentTheme)
 
   function handleSignOut() {
     signOut()
@@ -69,6 +72,17 @@ export default function AppShell() {
             })}
           </nav>
 
+          {/* Theme toggle */}
+          <button
+            onClick={() => setTheme(toggleTheme())}
+            className="text-sm transition-colors shrink-0 p-1.5 rounded"
+            style={{ color: 'var(--nav-fg-muted)' }}
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
+          </button>
+
           {/* Sign out */}
           <button
             onClick={handleSignOut}
@@ -91,6 +105,23 @@ export default function AppShell() {
         <Outlet />
       </main>
     </div>
+  )
+}
+
+function SunIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <circle cx="12" cy="12" r="4"/>
+      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+    </svg>
+  )
+}
+
+function MoonIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+    </svg>
   )
 }
 
