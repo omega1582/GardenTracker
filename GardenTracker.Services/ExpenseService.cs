@@ -35,8 +35,9 @@ public class ExpenseService(IExpenseRepository expenseRepository, ISeasonReposit
 
     public async Task<Expense> CreateAsync(int gardenId, int year, int userId, Expense expense)
     {
-        var season = await seasonRepository.GetByYearAsync(gardenId, year);
-        expense.SeasonId = season!.Id;
+        var season = await seasonRepository.GetByYearAsync(gardenId, year)
+            ?? throw new InvalidOperationException($"No season found for garden {gardenId} year {year}.");
+        expense.SeasonId = season.Id;
         expense.Id = await expenseRepository.CreateAsync(expense);
         logger.LogInformation("Expense {ExpenseId} created in garden {GardenId} year {Year} by user {UserId}", expense.Id, gardenId, year, userId);
         return expense;

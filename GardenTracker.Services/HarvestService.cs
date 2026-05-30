@@ -35,8 +35,9 @@ public class HarvestService(IHarvestRepository harvestRepository, ISeasonReposit
 
     public async Task<Harvest> CreateAsync(int gardenId, int year, int userId, Harvest harvest)
     {
-        var season = await seasonRepository.GetByYearAsync(gardenId, year);
-        harvest.SeasonId = season!.Id;
+        var season = await seasonRepository.GetByYearAsync(gardenId, year)
+            ?? throw new InvalidOperationException($"No season found for garden {gardenId} year {year}.");
+        harvest.SeasonId = season.Id;
         harvest.Id = await harvestRepository.CreateAsync(harvest);
         logger.LogInformation("Harvest {HarvestId} created in garden {GardenId} year {Year} by user {UserId}", harvest.Id, gardenId, year, userId);
         return harvest;

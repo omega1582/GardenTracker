@@ -40,8 +40,9 @@ public class PlantingService(
 
     public async Task<BedPlanting> CreateAsync(int gardenId, int year, int userId, BedPlanting planting, int? quantityUsedFromInventory)
     {
-        var season = await seasonRepository.GetByYearAsync(gardenId, year);
-        planting.SeasonId = season!.Id;
+        var season = await seasonRepository.GetByYearAsync(gardenId, year)
+            ?? throw new InvalidOperationException($"No season found for garden {gardenId} year {year}.");
+        planting.SeasonId = season.Id;
         planting.QuantityUsedFromInventory = quantityUsedFromInventory;
         planting.Id = await plantingRepository.CreateAsync(planting);
 
