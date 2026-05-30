@@ -23,9 +23,8 @@ export default function AppShell() {
     <div className="min-h-screen bg-background">
       {/* ── Header ──────────────────────────────────────────────────── */}
       <header
-        style={{ backgroundColor: 'oklch(0.22 0.07 155)' }}
+        style={{ backgroundColor: 'var(--nav-bg)', borderColor: 'var(--nav-accent)' }}
         className="sticky top-0 z-40 border-b"
-        // terracotta bottom border for the header
       >
         <div
           className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4 gap-8"
@@ -38,7 +37,7 @@ export default function AppShell() {
             <LeafMark />
             <span
               className="heading-serif text-xl font-semibold italic tracking-tight"
-              style={{ color: 'oklch(0.965 0.010 82)' }}
+              style={{ color: 'var(--nav-fg)' }}
             >
               Garden Tracker
             </span>
@@ -54,9 +53,7 @@ export default function AppShell() {
                   to={to}
                   className="relative px-3 py-1.5 text-sm transition-colors"
                   style={{
-                    color: active
-                      ? 'oklch(0.965 0.010 82)'
-                      : 'oklch(0.78 0.025 155)',
+                    color: active ? 'var(--nav-fg)' : 'var(--nav-fg-muted)',
                     fontWeight: active ? 500 : 400,
                   }}
                 >
@@ -64,7 +61,7 @@ export default function AppShell() {
                   {active && (
                     <span
                       className="absolute bottom-0 left-3 right-3 h-px"
-                      style={{ backgroundColor: 'oklch(0.62 0.140 43)' }}
+                      style={{ backgroundColor: 'var(--nav-accent)' }}
                     />
                   )}
                 </Link>
@@ -76,12 +73,12 @@ export default function AppShell() {
           <button
             onClick={handleSignOut}
             className="text-sm transition-colors shrink-0"
-            style={{ color: 'oklch(0.65 0.020 155)' }}
+            style={{ color: 'var(--nav-fg-subtle)' }}
             onMouseEnter={(e) =>
-              ((e.target as HTMLElement).style.color = 'oklch(0.965 0.010 82)')
+              ((e.target as HTMLElement).style.color = 'var(--nav-fg)')
             }
             onMouseLeave={(e) =>
-              ((e.target as HTMLElement).style.color = 'oklch(0.65 0.020 155)')
+              ((e.target as HTMLElement).style.color = 'var(--nav-fg-subtle)')
             }
           >
             Sign out

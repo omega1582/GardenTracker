@@ -48,7 +48,7 @@ export default function LoginPage() {
               <path d="M10 18 L10 8" stroke="oklch(0.30 0.090 155)" strokeWidth="1" strokeLinecap="round"/>
             </svg>
           </div>
-          <h1 className="heading-serif text-3xl font-semibold italic" style={{ color: 'oklch(0.30 0.090 155)' }}>Garden Tracker</h1>
+          <h1 className="heading-serif text-3xl font-semibold italic" style={{ color: 'var(--primary)' }}>Garden Tracker</h1>
           <p className="text-sm text-muted-foreground">Sign in to your account</p>
         </div>
 

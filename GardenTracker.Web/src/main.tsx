@@ -16,6 +16,9 @@ import InventoryPage from '@/features/inventory/InventoryPage'
 import WaterBillsPage from '@/features/waterBills/WaterBillsPage'
 import ReportsPage from '@/features/reports/ReportsPage'
 import './index.css'
+import { initTheme } from '@/lib/theme'
+
+initTheme()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

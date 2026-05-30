@@ -95,6 +95,53 @@
     --sidebar-ring:               oklch(0.30  0.090 155);
 }
 
+/* ── Botanical Press — dark palette ───────────────────────────────────── */
+.dark {
+    /* Deep forest floor */
+    --background:         oklch(0.13 0.018 160);
+    --foreground:         oklch(0.92 0.012 82);
+
+    /* Lifted dark surfaces */
+    --card:               oklch(0.18 0.020 160);
+    --card-foreground:    oklch(0.92 0.012 82);
+    --popover:            oklch(0.18 0.020 160);
+    --popover-foreground: oklch(0.92 0.012 82);
+
+    /* Primary: lighter forest green — readable on dark */
+    --primary:            oklch(0.68 0.10 155);
+    --primary-foreground: oklch(0.13 0.018 160);
+
+    /* Secondary: dark surface */
+    --secondary:          oklch(0.22 0.020 160);
+    --secondary-foreground: oklch(0.78 0.018 155);
+
+    /* Muted */
+    --muted:              oklch(0.20 0.016 158);
+    --muted-foreground:   oklch(0.55 0.025 152);
+
+    /* Accent: terracotta — slightly brighter for dark bg */
+    --accent:             oklch(0.66 0.138 43);
+    --accent-foreground:  oklch(0.13 0.018 160);
+
+    /* Destructive: warm red */
+    --destructive:        oklch(0.65 0.210 25);
+
+    /* Borders */
+    --border:             oklch(0.26 0.022 158);
+    --input:              oklch(0.24 0.020 158);
+    --ring:               oklch(0.68 0.10 155);
+
+    /* Sidebar */
+    --sidebar:                    oklch(0.18 0.020 160);
+    --sidebar-foreground:         oklch(0.92 0.012 82);
+    --sidebar-primary:            oklch(0.68 0.10 155);
+    --sidebar-primary-foreground: oklch(0.13 0.018 160);
+    --sidebar-accent:             oklch(0.22 0.020 160);
+    --sidebar-accent-foreground:  oklch(0.78 0.018 155);
+    --sidebar-border:             oklch(0.26 0.022 158);
+    --sidebar-ring:               oklch(0.68 0.10 155);
+}
+
 /* ── Base layer ────────────────────────────────────────────────────────── */
 @layer base {
     * {
@@ -124,6 +171,23 @@
 }
 
 /* ── Botanical detail: ruled content sections ──────────────────────────── */
+/* ── Nav theming ───────────────────────────────────────────────────────── */
+:root {
+    --nav-bg:           oklch(0.22 0.07 155);
+    --nav-fg:           oklch(0.965 0.010 82);
+    --nav-fg-muted:     oklch(0.78 0.025 155);
+    --nav-fg-subtle:    oklch(0.65 0.020 155);
+    --nav-accent:       oklch(0.62 0.140 43);
+}
+
+.dark {
+    --nav-bg:           oklch(0.10 0.022 160);
+    --nav-fg:           oklch(0.92 0.012 82);
+    --nav-fg-muted:     oklch(0.62 0.030 155);
+    --nav-fg-subtle:    oklch(0.45 0.022 155);
+    --nav-accent:       oklch(0.66 0.138 43);
+}
+
 @layer utilities {
     .field-label {
         font-family: var(--font-mono);
