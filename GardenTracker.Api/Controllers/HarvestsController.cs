@@ -53,9 +53,10 @@ public class HarvestsController(IHarvestService harvestService) : ApiControllerB
 
     private static HarvestResponse Map(Harvest h) => new()
     {
-        Id = h.Id, BedId = h.BedId, SeasonId = h.SeasonId, PlantVarietyId = h.PlantVarietyId,
-        PlantVarietyName = h.PlantVariety?.Name ?? string.Empty,
-        PlantTypeName = h.PlantVariety?.PlantType?.Name ?? string.Empty,
+        Id = h.Id, BedId = h.BedId, BedName = h.BedName ?? string.Empty,
+        SeasonId = h.SeasonId, PlantVarietyId = h.PlantVarietyId,
+        PlantVarietyName = h.PlantVarietyName ?? string.Empty,
+        PlantTypeName = h.PlantTypeName ?? string.Empty,
         Quantity = h.Quantity, Unit = h.Unit, HarvestDate = h.HarvestDate, Notes = h.Notes
     };
 }

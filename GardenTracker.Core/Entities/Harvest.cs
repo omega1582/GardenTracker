@@ -17,4 +17,9 @@ public class Harvest
     public Season Season { get; set; } = null!;
     public PlantVariety PlantVariety { get; set; } = null!;
     public ICollection<BedPlanting> SeedSavedPlantings { get; set; } = [];
+
+    // Populated by Dapper JOINs — not persisted
+    public string? BedName { get; set; }
+    public string? PlantVarietyName { get; set; }
+    public string? PlantTypeName { get; set; }
 }

@@ -10,8 +10,15 @@ public class HarvestRepository(IConnectionFactory connectionFactory) : IHarvestR
     {
         using var conn = connectionFactory.CreateConnection();
         var sql = """
-            SELECT h.* FROM Harvests h
+            SELECT h.*,
+                   b.Name AS BedName,
+                   pv.Name AS PlantVarietyName,
+                   pt.Name AS PlantTypeName
+            FROM Harvests h
             INNER JOIN Seasons s ON h.SeasonId = s.Id
+            INNER JOIN Beds b ON h.BedId = b.Id
+            INNER JOIN PlantVarieties pv ON h.PlantVarietyId = pv.Id
+            INNER JOIN PlantTypes pt ON pv.PlantTypeId = pt.Id
             WHERE s.GardenId = @GardenId AND s.Year = @Year
               AND (@BedId IS NULL OR h.BedId = @BedId)
               AND (@PlantVarietyId IS NULL OR h.PlantVarietyId = @PlantVarietyId)

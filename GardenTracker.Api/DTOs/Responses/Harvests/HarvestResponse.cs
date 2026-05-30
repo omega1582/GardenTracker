@@ -6,6 +6,7 @@ public class HarvestResponse
 {
     public int Id { get; set; }
     public int BedId { get; set; }
+    public string BedName { get; set; } = string.Empty;
     public int SeasonId { get; set; }
     public int PlantVarietyId { get; set; }
     public string PlantVarietyName { get; set; } = string.Empty;

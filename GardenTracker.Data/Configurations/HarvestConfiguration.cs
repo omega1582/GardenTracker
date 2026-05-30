@@ -27,5 +27,9 @@ public class HarvestConfiguration : IEntityTypeConfiguration<Harvest>
             .WithMany(v => v.Harvests)
             .HasForeignKey(h => h.PlantVarietyId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Ignore(h => h.BedName);
+        builder.Ignore(h => h.PlantVarietyName);
+        builder.Ignore(h => h.PlantTypeName);
     }
 }

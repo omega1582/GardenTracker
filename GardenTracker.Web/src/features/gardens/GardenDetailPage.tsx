@@ -6,13 +6,16 @@ import { getBeds, deleteBed } from '@/api/beds'
 import { getSeasons, createSeason } from '@/api/seasons'
 import { getPlantings, deletePlanting } from '@/api/plantings'
 import { getExpenses, deleteExpense } from '@/api/expenses'
+import { getHarvests, deleteHarvest } from '@/api/harvests'
 import type { Bed } from '@/types/bed'
 import type { Planting } from '@/types/planting'
 import type { Expense } from '@/types/expense'
+import type { Harvest } from '@/types/harvest'
 import GardenFormDialog from './GardenFormDialog'
 import BedFormDialog from '@/features/beds/BedFormDialog'
 import PlantingFormDialog from '@/features/plantings/PlantingFormDialog'
 import ExpenseFormDialog from '@/features/expenses/ExpenseFormDialog'
+import HarvestFormDialog from '@/features/harvests/HarvestFormDialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -39,6 +42,8 @@ export default function GardenDetailPage() {
   const [editingPlanting, setEditingPlanting] = useState<Planting | undefined>()
   const [expenseFormOpen, setExpenseFormOpen] = useState(false)
   const [editingExpense, setEditingExpense] = useState<Expense | undefined>()
+  const [harvestFormOpen, setHarvestFormOpen] = useState(false)
+  const [editingHarvest, setEditingHarvest] = useState<Harvest | undefined>()
   const [selectedYear, setSelectedYear] = useState(CURRENT_YEAR)
 
   const { data: garden, isLoading: gardenLoading } = useQuery({
@@ -66,6 +71,12 @@ export default function GardenDetailPage() {
   const { data: expenses = [], isLoading: expensesLoading } = useQuery({
     queryKey: ['expenses', id, selectedYear],
     queryFn: () => getExpenses(id, selectedYear),
+    enabled: !!selectedSeason,
+  })
+
+  const { data: harvests = [], isLoading: harvestsLoading } = useQuery({
+    queryKey: ['harvests', id, selectedYear],
+    queryFn: () => getHarvests(id, selectedYear),
     enabled: !!selectedSeason,
   })
 
@@ -99,6 +110,11 @@ export default function GardenDetailPage() {
   const deleteExpenseMutation = useMutation({
     mutationFn: (expenseId: number) => deleteExpense(id, selectedYear, expenseId),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['expenses', id, selectedYear] }),
+  })
+
+  const deleteHarvestMutation = useMutation({
+    mutationFn: (harvestId: number) => deleteHarvest(id, selectedYear, harvestId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['harvests', id, selectedYear] }),
   })
 
   function openEditBed(bed: Bed) {
@@ -152,6 +168,22 @@ export default function GardenDetailPage() {
   function handleDeleteExpense(expense: Expense) {
     if (confirm(`Delete expense "${expense.description}"? This cannot be undone.`)) {
       deleteExpenseMutation.mutate(expense.id)
+    }
+  }
+
+  function openAddHarvest() {
+    setEditingHarvest(undefined)
+    setHarvestFormOpen(true)
+  }
+
+  function openEditHarvest(harvest: Harvest) {
+    setEditingHarvest(harvest)
+    setHarvestFormOpen(true)
+  }
+
+  function handleDeleteHarvest(harvest: Harvest) {
+    if (confirm(`Delete harvest of ${harvest.quantity} ${harvest.unit} of ${harvest.plantVarietyName}?`)) {
+      deleteHarvestMutation.mutate(harvest.id)
     }
   }
 
@@ -282,6 +314,39 @@ export default function GardenDetailPage() {
         </div>
       )}
 
+      {/* Harvests */}
+      {selectedSeason && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <h2 className="text-lg font-medium">Harvests</h2>
+              {harvests.length > 0 && (
+                <span className="text-sm text-muted-foreground">{harvests.length} logged</span>
+              )}
+            </div>
+            <Button size="sm" onClick={openAddHarvest}>Log Harvest</Button>
+          </div>
+
+          {harvestsLoading ? (
+            <p className="text-muted-foreground text-sm">Loading harvests…</p>
+          ) : harvests.length === 0 ? (
+            <p className="text-muted-foreground text-sm">No harvests logged yet.</p>
+          ) : (
+            <div className="space-y-2">
+              {harvests.map((harvest) => (
+                <HarvestRow
+                  key={harvest.id}
+                  harvest={harvest}
+                  onEdit={openEditHarvest}
+                  onDelete={handleDeleteHarvest}
+                  isDeleting={deleteHarvestMutation.isPending}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Beds */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -355,7 +420,72 @@ export default function GardenDetailPage() {
         beds={beds}
         editing={editingExpense}
       />
+      <HarvestFormDialog
+        open={harvestFormOpen}
+        onClose={() => setHarvestFormOpen(false)}
+        gardenId={id}
+        year={selectedYear}
+        beds={beds}
+        editing={editingHarvest}
+      />
     </div>
+  )
+}
+
+const UNIT_LABELS: Record<string, string> = {
+  Pounds: 'lbs',
+  Ounces: 'oz',
+  Count: 'each',
+  Bunch: 'bunch',
+}
+
+function HarvestRow({
+  harvest,
+  onEdit,
+  onDelete,
+  isDeleting,
+}: {
+  harvest: Harvest
+  onEdit: (h: Harvest) => void
+  onDelete: (h: Harvest) => void
+  isDeleting: boolean
+}) {
+  return (
+    <Card>
+      <CardContent className="pt-3 pb-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="space-y-0.5 flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm font-medium">
+                {harvest.plantTypeName} — {harvest.plantVarietyName}
+              </span>
+              <Badge variant="secondary" className="text-xs">{harvest.bedName}</Badge>
+            </div>
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <span className="font-medium text-foreground">
+                {harvest.quantity} {UNIT_LABELS[harvest.unit] ?? harvest.unit}
+              </span>
+              <span>{harvest.harvestDate}</span>
+            </div>
+            {harvest.notes && (
+              <p className="text-xs text-muted-foreground">{harvest.notes}</p>
+            )}
+          </div>
+          <div className="flex gap-1 shrink-0">
+            <Button variant="ghost" size="sm" onClick={() => onEdit(harvest)}>Edit</Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-destructive hover:text-destructive"
+              onClick={() => onDelete(harvest)}
+              disabled={isDeleting}
+            >
+              Delete
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   )
 }
 
