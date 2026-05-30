@@ -190,9 +190,12 @@ export default function GardenDetailPage() {
   if (gardenLoading) return <p className="text-muted-foreground">Loading…</p>
   if (!garden) return <p className="text-destructive">Garden not found.</p>
 
-  // Build year options: all existing season years + current year
+  // Build year options: existing season years + a rolling window of 5 past and 2 future years
   const yearOptions = Array.from(
-    new Set([...seasons.map(s => s.year), CURRENT_YEAR])
+    new Set([
+      ...seasons.map(s => s.year),
+      ...Array.from({ length: 8 }, (_, i) => CURRENT_YEAR - 5 + i),
+    ])
   ).sort((a, b) => b - a)
 
   return (

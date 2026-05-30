@@ -7,9 +7,13 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 
+const CURRENT_YEAR = new Date().getFullYear()
+const ALL_YEARS = 'all'
+
 export default function InventoryPage() {
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<InventoryItem | undefined>()
+  const [selectedYear, setSelectedYear] = useState<number | 'all'>(CURRENT_YEAR)
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ['inventory'],
@@ -28,8 +32,17 @@ export default function InventoryPage() {
 
   if (isLoading) return <p className="text-muted-foreground">Loading…</p>
 
+  // Build year options from purchase dates present in data
+  const years = Array.from(
+    new Set(items.map(i => Number(i.purchaseDate.slice(0, 4))))
+  ).sort((a, b) => b - a)
+
+  const filtered = selectedYear === ALL_YEARS
+    ? items
+    : items.filter(i => i.purchaseDate.startsWith(String(selectedYear)))
+
   // Group by plant type, then variety
-  const grouped = items.reduce<Record<string, Record<string, InventoryItem[]>>>((acc, item) => {
+  const grouped = filtered.reduce<Record<string, Record<string, InventoryItem[]>>>((acc, item) => {
     const pt = item.plantTypeName
     const pv = item.plantVarietyName
     acc[pt] ??= {}
@@ -42,11 +55,29 @@ export default function InventoryPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold tracking-tight">Inventory</h1>
-        <Button size="sm" onClick={openAdd}>Add Item</Button>
+        <div className="flex items-center gap-3">
+          {years.length > 0 && (
+            <select
+              className="rounded-md border border-input bg-background px-3 py-1.5 text-sm"
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(e.target.value === ALL_YEARS ? ALL_YEARS : Number(e.target.value))}
+            >
+              <option value={ALL_YEARS}>All years</option>
+              {years.map(y => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
+          )}
+          <Button size="sm" onClick={openAdd}>Add Item</Button>
+        </div>
       </div>
 
-      {items.length === 0 ? (
-        <p className="text-muted-foreground">No inventory yet. Add seeds or plants you've purchased.</p>
+      {filtered.length === 0 ? (
+        <p className="text-muted-foreground">
+          {items.length === 0
+            ? 'No inventory yet. Add seeds or plants you\'ve purchased.'
+            : `No inventory for ${selectedYear}.`}
+        </p>
       ) : (
         <div className="space-y-6">
           {Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b)).map(([plantType, varieties]) => (
