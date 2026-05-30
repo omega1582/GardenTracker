@@ -23,6 +23,8 @@ public class InventoryRepositoryTests(DatabaseFixture db) : IClassFixture<Databa
         Notes = "Test packet"
     };
 
+    // ── CreateAsync ─────────────────────────────────────────────────────────
+
     [Fact]
     public async Task CreateAsync_InsertsItem_AndReturnsGeneratedId()
     {
@@ -33,6 +35,8 @@ public class InventoryRepositoryTests(DatabaseFixture db) : IClassFixture<Databa
 
         id.Should().BeGreaterThan(0);
     }
+
+    // ── GetByIdAsync ────────────────────────────────────────────────────────
 
     [Fact]
     public async Task GetByIdAsync_ReturnsPersistData()
@@ -59,6 +63,8 @@ public class InventoryRepositoryTests(DatabaseFixture db) : IClassFixture<Databa
         result.Should().BeNull();
     }
 
+    // ── GetByUserAsync ──────────────────────────────────────────────────────
+
     [Fact]
     public async Task GetByUserAsync_ReturnsOnlyThatUsersItems()
     {
@@ -75,6 +81,16 @@ public class InventoryRepositoryTests(DatabaseFixture db) : IClassFixture<Databa
     }
 
     [Fact]
+    public async Task GetByUserAsync_ReturnsEmpty_WhenUserHasNoItems()
+    {
+        var userId = await _seed.CreateUserAsync("inv-noitems@example.com");
+
+        var results = await _repo.GetByUserAsync(userId);
+
+        results.Should().BeEmpty();
+    }
+
+    [Fact]
     public async Task GetByUserAsync_PopulatesJoinedNames()
     {
         var data = await _seed.CreateFullSeedAsync("inv-names");
@@ -88,10 +104,23 @@ public class InventoryRepositoryTests(DatabaseFixture db) : IClassFixture<Databa
     }
 
     [Fact]
+    public async Task GetByUserAsync_WithBulkItems_ReturnsAll()
+    {
+        var data = await _seed.CreateFullSeedAsync("inv-bulk");
+        await _seed.CreateInventoryItemsAsync(data.UserId, data.VarietyId, 10);
+
+        var results = await _repo.GetByUserAsync(data.UserId);
+
+        results.Should().HaveCount(10);
+    }
+
+    // ── GetByVarietyAsync ───────────────────────────────────────────────────
+
+    [Fact]
     public async Task GetByVarietyAsync_ReturnsItemsForVariety()
     {
         var data = await _seed.CreateFullSeedAsync("inv-variety");
-        var otherVarietyId = await _seed.CreatePlantVarietyAsync(data.PlantTypeId, "Roma");
+        var otherVarietyId = await _seed.CreatePlantVarietyAsync(data.PlantTypeId, "Roma-inv-variety");
         await _repo.CreateAsync(MakeItem(data.UserId, data.VarietyId));
         await _repo.CreateAsync(MakeItem(data.UserId, otherVarietyId));
 
@@ -100,6 +129,33 @@ public class InventoryRepositoryTests(DatabaseFixture db) : IClassFixture<Databa
         results.Should().ContainSingle()
             .Which.PlantVarietyId.Should().Be(data.VarietyId);
     }
+
+    [Fact]
+    public async Task GetByVarietyAsync_ReturnsEmpty_WhenNoItemsExist()
+    {
+        var data = await _seed.CreateFullSeedAsync("inv-variety-empty");
+
+        var results = await _repo.GetByVarietyAsync(data.VarietyId, data.UserId);
+
+        results.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task GetByVarietyAsync_ExcludesOtherUsersItems()
+    {
+        var dataA = await _seed.CreateFullSeedAsync("inv-variety-usera");
+        // User B shares the same variety (both point to same PlantVariety row)
+        var userBId = await _seed.CreateUserAsync("inv-variety-userb@example.com");
+        await _repo.CreateAsync(MakeItem(dataA.UserId, dataA.VarietyId));
+        await _repo.CreateAsync(MakeItem(userBId, dataA.VarietyId));
+
+        var results = await _repo.GetByVarietyAsync(dataA.VarietyId, dataA.UserId);
+
+        results.Should().ContainSingle()
+            .Which.UserId.Should().Be(dataA.UserId);
+    }
+
+    // ── UpdateRemainingQuantityAsync ────────────────────────────────────────
 
     [Fact]
     public async Task UpdateRemainingQuantityAsync_ChangesOnlyRemainingField()
@@ -114,6 +170,8 @@ public class InventoryRepositoryTests(DatabaseFixture db) : IClassFixture<Databa
         fetched!.QuantityRemaining.Should().Be(38);
         fetched.QuantityPurchased.Should().Be(50); // unchanged
     }
+
+    // ── UpdateAsync ─────────────────────────────────────────────────────────
 
     [Fact]
     public async Task UpdateAsync_PersistsChangedFields()
@@ -134,6 +192,25 @@ public class InventoryRepositoryTests(DatabaseFixture db) : IClassFixture<Databa
     }
 
     [Fact]
+    public async Task UpdateAsync_DoesNotAffectOtherItems()
+    {
+        var data = await _seed.CreateFullSeedAsync("inv-update-isolation");
+        var itemA = MakeItem(data.UserId, data.VarietyId, qty: 50);
+        var itemB = MakeItem(data.UserId, data.VarietyId, qty: 25);
+        itemA.Id = await _repo.CreateAsync(itemA);
+        itemB.Id = await _repo.CreateAsync(itemB);
+
+        itemA.TotalCost = 9.99m;
+        await _repo.UpdateAsync(itemA);
+
+        var fetchedB = await _repo.GetByIdAsync(itemB.Id);
+        fetchedB!.TotalCost.Should().Be(3.99m); // unchanged
+        fetchedB.QuantityPurchased.Should().Be(25);
+    }
+
+    // ── DeleteAsync ─────────────────────────────────────────────────────────
+
+    [Fact]
     public async Task DeleteAsync_RemovesItem()
     {
         var data = await _seed.CreateFullSeedAsync("inv-delete");
@@ -144,5 +221,20 @@ public class InventoryRepositoryTests(DatabaseFixture db) : IClassFixture<Databa
 
         var fetched = await _repo.GetByIdAsync(item.Id);
         fetched.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task DeleteAsync_DoesNotAffectOtherItems()
+    {
+        var data = await _seed.CreateFullSeedAsync("inv-delete-isolation");
+        var itemA = MakeItem(data.UserId, data.VarietyId);
+        var itemB = MakeItem(data.UserId, data.VarietyId);
+        itemA.Id = await _repo.CreateAsync(itemA);
+        itemB.Id = await _repo.CreateAsync(itemB);
+
+        await _repo.DeleteAsync(itemA.Id);
+
+        var fetchedB = await _repo.GetByIdAsync(itemB.Id);
+        fetchedB.Should().NotBeNull();
     }
 }

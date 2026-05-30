@@ -1,4 +1,5 @@
 using Dapper;
+using GardenTracker.Core.Enums;
 using GardenTracker.Data;
 
 namespace GardenTracker.Tests.Integration;
@@ -65,6 +66,86 @@ public class TestDataBuilder(IConnectionFactory connectionFactory)
             """,
             new { GardenId = gardenId, Name = name });
     }
+
+    public async Task<int> CreateSupplierAsync(string name = "Test Supplier")
+    {
+        using var conn = connectionFactory.CreateConnection();
+        return await conn.ExecuteScalarAsync<int>(
+            """
+            INSERT INTO Suppliers (Name, SupplierType)
+            OUTPUT INSERTED.Id
+            VALUES (@Name, @SupplierType)
+            """,
+            new { Name = name, SupplierType = (int)SupplierType.Online });
+    }
+
+    public async Task<int> CreateInventoryItemAsync(
+        int userId, int varietyId, int qty = 50, InventoryType type = InventoryType.Seed)
+    {
+        using var conn = connectionFactory.CreateConnection();
+        return await conn.ExecuteScalarAsync<int>(
+            """
+            INSERT INTO InventoryItems (UserId, PlantVarietyId, Type, QuantityPurchased, QuantityRemaining, TotalCost, PurchaseDate)
+            OUTPUT INSERTED.Id
+            VALUES (@UserId, @VarietyId, @Type, @Qty, @Qty, 3.99, '2025-03-01')
+            """,
+            new { UserId = userId, VarietyId = varietyId, Type = (int)type, Qty = qty });
+    }
+
+    public async Task<int> CreateExpenseAsync(
+        int seasonId, int? bedId = null,
+        ExpenseCategory category = ExpenseCategory.Seeds, decimal amount = 10.00m)
+    {
+        using var conn = connectionFactory.CreateConnection();
+        return await conn.ExecuteScalarAsync<int>(
+            """
+            INSERT INTO Expenses (SeasonId, BedId, Category, Description, Amount, ExpenseDate)
+            OUTPUT INSERTED.Id
+            VALUES (@SeasonId, @BedId, @Category, 'Test expense', @Amount, '2025-04-01')
+            """,
+            new { SeasonId = seasonId, BedId = bedId, Category = (int)category, Amount = amount });
+    }
+
+    // ── Bulk helpers ────────────────────────────────────────────────────────
+
+    /// <summary>Creates <paramref name="count"/> inventory items and returns their IDs.</summary>
+    public async Task<IReadOnlyList<int>> CreateInventoryItemsAsync(int userId, int varietyId, int count)
+    {
+        var ids = new List<int>(count);
+        for (var i = 0; i < count; i++)
+            ids.Add(await CreateInventoryItemAsync(userId, varietyId));
+        return ids;
+    }
+
+    /// <summary>Creates <paramref name="count"/> plantings in the same bed/season and returns their IDs.</summary>
+    public async Task<IReadOnlyList<int>> CreatePlantingsAsync(SeedData data, int count)
+    {
+        using var conn = connectionFactory.CreateConnection();
+        var ids = new List<int>(count);
+        for (var i = 0; i < count; i++)
+        {
+            var id = await conn.ExecuteScalarAsync<int>(
+                """
+                INSERT INTO BedPlantings (BedId, SeasonId, PlantVarietyId, StartMethod, Quantity, TotalCost)
+                OUTPUT INSERTED.Id
+                VALUES (@BedId, @SeasonId, @VarietyId, @StartMethod, 6, 0)
+                """,
+                new { data.BedId, data.SeasonId, data.VarietyId, StartMethod = (int)StartMethod.Seed });
+            ids.Add(id);
+        }
+        return ids;
+    }
+
+    /// <summary>Creates <paramref name="count"/> expenses for a season and returns their IDs.</summary>
+    public async Task<IReadOnlyList<int>> CreateExpensesAsync(int seasonId, int count, int? bedId = null)
+    {
+        var ids = new List<int>(count);
+        for (var i = 0; i < count; i++)
+            ids.Add(await CreateExpenseAsync(seasonId, bedId));
+        return ids;
+    }
+
+    // ── Full seed chain ─────────────────────────────────────────────────────
 
     /// <summary>
     /// Creates a complete ownership chain: User → Garden → Season + Bed.
