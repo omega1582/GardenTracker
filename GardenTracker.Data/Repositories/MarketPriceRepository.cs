@@ -11,9 +11,15 @@ public class MarketPriceRepository(IConnectionFactory connectionFactory) : IMark
         using var conn = connectionFactory.CreateConnection();
         return await conn.QueryAsync<MarketPrice>(
             """
-            SELECT mp.* FROM MarketPrices mp
+            SELECT mp.*,
+                   pt.Name AS PlantTypeName,
+                   pv.Name AS PlantVarietyName
+            FROM MarketPrices mp
             INNER JOIN Seasons s ON mp.SeasonId = s.Id
+            INNER JOIN PlantTypes pt ON mp.PlantTypeId = pt.Id
+            LEFT JOIN PlantVarieties pv ON mp.PlantVarietyId = pv.Id
             WHERE s.GardenId = @GardenId AND s.Year = @Year
+            ORDER BY pt.Name, pv.Name
             """,
             new { GardenId = gardenId, Year = year });
     }

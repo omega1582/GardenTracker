@@ -28,5 +28,8 @@ public class MarketPriceConfiguration : IEntityTypeConfiguration<MarketPrice>
             .HasForeignKey(m => m.PlantVarietyId)
             .IsRequired(false)
             .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Ignore(m => m.PlantTypeName);
+        builder.Ignore(m => m.PlantVarietyName);
     }
 }

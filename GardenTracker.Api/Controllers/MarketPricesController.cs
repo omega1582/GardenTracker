@@ -52,8 +52,8 @@ public class MarketPricesController(IMarketPriceService marketPriceService) : Ap
     private static MarketPriceResponse Map(MarketPrice m) => new()
     {
         Id = m.Id, SeasonId = m.SeasonId, PlantTypeId = m.PlantTypeId,
-        PlantTypeName = m.PlantType?.Name ?? string.Empty,
-        PlantVarietyId = m.PlantVarietyId, PlantVarietyName = m.PlantVariety?.Name,
+        PlantTypeName = m.PlantTypeName ?? string.Empty,
+        PlantVarietyId = m.PlantVarietyId, PlantVarietyName = m.PlantVarietyName,
         PricePerUnit = m.PricePerUnit, Unit = m.Unit, RecordedDate = m.RecordedDate
     };
 }

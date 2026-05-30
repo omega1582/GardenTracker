@@ -15,4 +15,8 @@ public class MarketPrice
     public Season Season { get; set; } = null!;
     public PlantType PlantType { get; set; } = null!;
     public PlantVariety? PlantVariety { get; set; }
+
+    // Populated by Dapper JOINs — not persisted
+    public string? PlantTypeName { get; set; }
+    public string? PlantVarietyName { get; set; }
 }
