@@ -24,7 +24,8 @@ public class ExpenseService(IExpenseRepository expenseRepository, ISeasonReposit
         var expense = await expenseRepository.GetByIdAsync(id);
         if (expense == null) return null;
         var season = await seasonRepository.GetByIdAsync(expense.SeasonId);
-        var garden = await gardenRepository.GetByIdAsync(season!.GardenId);
+        if (season == null) return null;
+        var garden = await gardenRepository.GetByIdAsync(season.GardenId);
         if (garden?.UserId != userId)
         {
             logger.LogInformation("Expense {ExpenseId} access denied — not owned by user {UserId}", id, userId);

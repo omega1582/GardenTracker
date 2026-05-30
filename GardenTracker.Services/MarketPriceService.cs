@@ -18,8 +18,9 @@ public class MarketPriceService(IMarketPriceRepository marketPriceRepository, IS
 
     public async Task<MarketPrice> CreateAsync(int gardenId, int year, int userId, MarketPrice price)
     {
-        var season = await seasonRepository.GetByYearAsync(gardenId, year);
-        price.SeasonId = season!.Id;
+        var season = await seasonRepository.GetByYearAsync(gardenId, year)
+            ?? throw new InvalidOperationException($"No season found for garden {gardenId} year {year}.");
+        price.SeasonId = season.Id;
         price.Id = await marketPriceRepository.CreateAsync(price);
         return price;
     }

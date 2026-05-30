@@ -29,7 +29,8 @@ public class PlantingService(
         var planting = await plantingRepository.GetByIdAsync(id);
         if (planting == null) return null;
         var season = await seasonRepository.GetByIdAsync(planting.SeasonId);
-        var garden = await gardenRepository.GetByIdAsync(season!.GardenId);
+        if (season == null) return null;
+        var garden = await gardenRepository.GetByIdAsync(season.GardenId);
         if (garden?.UserId != userId)
         {
             logger.LogInformation("Planting {PlantingId} access denied — not owned by user {UserId}", id, userId);

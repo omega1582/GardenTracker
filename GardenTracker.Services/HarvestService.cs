@@ -24,7 +24,8 @@ public class HarvestService(IHarvestRepository harvestRepository, ISeasonReposit
         var harvest = await harvestRepository.GetByIdAsync(id);
         if (harvest == null) return null;
         var season = await seasonRepository.GetByIdAsync(harvest.SeasonId);
-        var garden = await gardenRepository.GetByIdAsync(season!.GardenId);
+        if (season == null) return null;
+        var garden = await gardenRepository.GetByIdAsync(season.GardenId);
         if (garden?.UserId != userId)
         {
             logger.LogInformation("Harvest {HarvestId} access denied — not owned by user {UserId}", id, userId);
