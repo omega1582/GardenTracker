@@ -7,15 +7,18 @@ import { getSeasons, createSeason } from '@/api/seasons'
 import { getPlantings, deletePlanting } from '@/api/plantings'
 import { getExpenses, deleteExpense } from '@/api/expenses'
 import { getHarvests, deleteHarvest } from '@/api/harvests'
+import { getMarketPrices, deleteMarketPrice } from '@/api/marketPrices'
 import type { Bed } from '@/types/bed'
 import type { Planting } from '@/types/planting'
 import type { Expense } from '@/types/expense'
 import type { Harvest } from '@/types/harvest'
+import type { MarketPrice } from '@/types/marketPrice'
 import GardenFormDialog from './GardenFormDialog'
 import BedFormDialog from '@/features/beds/BedFormDialog'
 import PlantingFormDialog from '@/features/plantings/PlantingFormDialog'
 import ExpenseFormDialog from '@/features/expenses/ExpenseFormDialog'
 import HarvestFormDialog from '@/features/harvests/HarvestFormDialog'
+import MarketPriceFormDialog from '@/features/marketPrices/MarketPriceFormDialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -44,6 +47,8 @@ export default function GardenDetailPage() {
   const [editingExpense, setEditingExpense] = useState<Expense | undefined>()
   const [harvestFormOpen, setHarvestFormOpen] = useState(false)
   const [editingHarvest, setEditingHarvest] = useState<Harvest | undefined>()
+  const [marketPriceFormOpen, setMarketPriceFormOpen] = useState(false)
+  const [editingMarketPrice, setEditingMarketPrice] = useState<MarketPrice | undefined>()
   const [selectedYear, setSelectedYear] = useState(CURRENT_YEAR)
 
   const { data: garden, isLoading: gardenLoading } = useQuery({
@@ -71,6 +76,12 @@ export default function GardenDetailPage() {
   const { data: expenses = [], isLoading: expensesLoading } = useQuery({
     queryKey: ['expenses', id, selectedYear],
     queryFn: () => getExpenses(id, selectedYear),
+    enabled: !!selectedSeason,
+  })
+
+  const { data: marketPrices = [] } = useQuery({
+    queryKey: ['market-prices', id, selectedYear],
+    queryFn: () => getMarketPrices(id, selectedYear),
     enabled: !!selectedSeason,
   })
 
@@ -115,6 +126,11 @@ export default function GardenDetailPage() {
   const deleteHarvestMutation = useMutation({
     mutationFn: (harvestId: number) => deleteHarvest(id, selectedYear, harvestId),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['harvests', id, selectedYear] }),
+  })
+
+  const deleteMarketPriceMutation = useMutation({
+    mutationFn: (priceId: number) => deleteMarketPrice(id, selectedYear, priceId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['market-prices', id, selectedYear] }),
   })
 
   function openEditBed(bed: Bed) {
@@ -350,6 +366,55 @@ export default function GardenDetailPage() {
         </div>
       )}
 
+      {/* Market Prices */}
+      {selectedSeason && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <h2 className="text-lg font-medium">Market Prices</h2>
+              <span className="text-xs text-muted-foreground">Used to calculate harvest value in reports</span>
+            </div>
+            <Button size="sm" variant="outline" onClick={() => { setEditingMarketPrice(undefined); setMarketPriceFormOpen(true) }}>
+              Add Price
+            </Button>
+          </div>
+
+          {marketPrices.length === 0 ? (
+            <p className="text-muted-foreground text-sm">
+              No market prices set — harvest value in reports will show $0.
+            </p>
+          ) : (
+            <div className="divide-y divide-border border border-border rounded-sm">
+              {marketPrices.map((mp) => (
+                <div key={mp.id} className="flex items-center justify-between px-4 py-2.5 text-sm">
+                  <span className="text-muted-foreground">
+                    {mp.plantTypeName}{mp.plantVarietyName ? ` — ${mp.plantVarietyName}` : ' (all varieties)'}
+                  </span>
+                  <div className="flex items-center gap-4">
+                    <span className="font-medium tabular-nums">
+                      ${mp.pricePerUnit.toFixed(2)} / {mp.unit.toLowerCase()}
+                    </span>
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="sm" onClick={() => { setEditingMarketPrice(mp); setMarketPriceFormOpen(true) }}>Edit</Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => {
+                          if (confirm(`Delete price for ${mp.plantTypeName}?`)) deleteMarketPriceMutation.mutate(mp.id)
+                        }}
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Beds */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -430,6 +495,13 @@ export default function GardenDetailPage() {
         year={selectedYear}
         beds={beds}
         editing={editingHarvest}
+      />
+      <MarketPriceFormDialog
+        open={marketPriceFormOpen}
+        onClose={() => setMarketPriceFormOpen(false)}
+        gardenId={id}
+        year={selectedYear}
+        editing={editingMarketPrice}
       />
     </div>
   )
