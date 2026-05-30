@@ -30,5 +30,8 @@ public class ExpenseConfiguration : IEntityTypeConfiguration<Expense>
             .HasForeignKey(e => e.SupplierId)
             .IsRequired(false)
             .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Ignore(e => e.BedName);
+        builder.Ignore(e => e.SupplierName);
     }
 }

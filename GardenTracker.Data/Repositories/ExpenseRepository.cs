@@ -11,8 +11,13 @@ public class ExpenseRepository(IConnectionFactory connectionFactory) : IExpenseR
     {
         using var conn = connectionFactory.CreateConnection();
         var sql = """
-            SELECT e.* FROM Expenses e
+            SELECT e.*,
+                   b.Name AS BedName,
+                   sup.Name AS SupplierName
+            FROM Expenses e
             INNER JOIN Seasons s ON e.SeasonId = s.Id
+            LEFT JOIN Beds b ON e.BedId = b.Id
+            LEFT JOIN Suppliers sup ON e.SupplierId = sup.Id
             WHERE s.GardenId = @GardenId AND s.Year = @Year
               AND (@BedId IS NULL OR e.BedId = @BedId)
               AND (@Category IS NULL OR e.Category = @Category)

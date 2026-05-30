@@ -16,4 +16,8 @@ public class Expense
     public Season Season { get; set; } = null!;
     public Bed? Bed { get; set; }
     public Supplier? Supplier { get; set; }
+
+    // Populated by Dapper JOINs — not persisted
+    public string? BedName { get; set; }
+    public string? SupplierName { get; set; }
 }

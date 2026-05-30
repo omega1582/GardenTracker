@@ -60,8 +60,8 @@ public class ExpensesController(IExpenseService expenseService) : ApiControllerB
 
     private static ExpenseResponse Map(Expense e) => new()
     {
-        Id = e.Id, SeasonId = e.SeasonId, BedId = e.BedId, SupplierId = e.SupplierId,
-        SupplierName = e.Supplier?.Name, Category = e.Category,
+        Id = e.Id, SeasonId = e.SeasonId, BedId = e.BedId, BedName = e.BedName,
+        SupplierId = e.SupplierId, SupplierName = e.SupplierName, Category = e.Category,
         Description = e.Description, Amount = e.Amount, ExpenseDate = e.ExpenseDate
     };
 }
