@@ -22,6 +22,13 @@ public class ReportsController(IReportService reportService) : ApiControllerBase
         return Ok(results.Select(MapWaterAttribution));
     }
 
+    [HttpGet("gardens/{gardenId:int}/season/{year:int}/beds")]
+    public async Task<ActionResult<IEnumerable<BedBreakdownResponse>>> GetBedBreakdown(int gardenId, int year)
+    {
+        var results = await reportService.GetBedBreakdownAsync(gardenId, year, CurrentUserId);
+        return results == null ? NotFound() : Ok(results.Select(MapBedBreakdown));
+    }
+
     [HttpGet("gardens/{gardenId:int}/year-over-year")]
     public async Task<ActionResult<IEnumerable<YearSummaryResponse>>> GetYearOverYear(int gardenId)
     {
@@ -64,6 +71,24 @@ public class ReportsController(IReportService reportService) : ApiControllerBase
         }),
         TotalAttributedCost = r.TotalAttributedCost,
         TotalAttributedGallons = r.TotalAttributedGallons
+    };
+
+    private static BedBreakdownResponse MapBedBreakdown(BedBreakdownResult r) => new()
+    {
+        BedId = r.BedId,
+        BedName = r.BedName,
+        TotalExpenses = r.TotalExpenses,
+        HarvestLines = r.HarvestLines.Select(h => new HarvestLineResponse
+        {
+            VarietyName = h.VarietyName,
+            PlantTypeName = h.PlantTypeName,
+            Quantity = h.Quantity,
+            Unit = h.Unit,
+            PricePerUnit = h.PricePerUnit,
+            Value = h.PricePerUnit.HasValue ? h.Quantity * h.PricePerUnit.Value : null
+        }),
+        TotalHarvestValue = r.TotalHarvestValue,
+        NetCost = r.NetCost
     };
 
     private static YearSummaryResponse MapYearSummary(YearSummaryResult r) => new()

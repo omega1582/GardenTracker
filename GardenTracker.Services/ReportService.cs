@@ -118,6 +118,39 @@ public class ReportService(
         return results;
     }
 
+    public async Task<IEnumerable<BedBreakdownResult>?> GetBedBreakdownAsync(int gardenId, int year, int userId)
+    {
+        var garden = await gardenRepository.GetByIdAsync(gardenId);
+        if (garden?.UserId != userId) return null;
+
+        var bedExpenses = (await reportRepository.GetBedExpenseTotalsAsync(gardenId, year))
+            .ToDictionary(b => b.BedId);
+        var bedHarvests = (await reportRepository.GetBedHarvestLinesAsync(gardenId, year))
+            .GroupBy(h => h.BedId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        var allBedIds = bedExpenses.Keys.Union(bedHarvests.Keys).ToHashSet();
+
+        return allBedIds.Select(bedId =>
+        {
+            var expenseRow = bedExpenses.GetValueOrDefault(bedId);
+            var harvests = bedHarvests.GetValueOrDefault(bedId) ?? [];
+            var harvestValue = harvests
+                .Where(h => h.PricePerUnit.HasValue)
+                .Sum(h => h.Quantity * h.PricePerUnit!.Value);
+            var expenses = expenseRow?.Total ?? 0;
+            return new BedBreakdownResult
+            {
+                BedId = bedId,
+                BedName = expenseRow?.BedName ?? harvests.FirstOrDefault()?.BedName ?? string.Empty,
+                TotalExpenses = expenses,
+                HarvestLines = harvests,
+                TotalHarvestValue = harvestValue,
+                NetCost = expenses - harvestValue
+            };
+        }).OrderBy(b => b.BedName);
+    }
+
     private static Dictionary<int, decimal> ComputeMonthlyWaterAttribution(List<WaterBill> bills)
     {
         var baselineMonths = bills.Where(b => !b.IsGardenActive).ToList();
