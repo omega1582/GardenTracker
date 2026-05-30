@@ -5,11 +5,14 @@ import { getGarden, deleteGarden } from '@/api/gardens'
 import { getBeds, deleteBed } from '@/api/beds'
 import { getSeasons, createSeason } from '@/api/seasons'
 import { getPlantings, deletePlanting } from '@/api/plantings'
+import { getExpenses, deleteExpense } from '@/api/expenses'
 import type { Bed } from '@/types/bed'
 import type { Planting } from '@/types/planting'
+import type { Expense } from '@/types/expense'
 import GardenFormDialog from './GardenFormDialog'
 import BedFormDialog from '@/features/beds/BedFormDialog'
 import PlantingFormDialog from '@/features/plantings/PlantingFormDialog'
+import ExpenseFormDialog from '@/features/expenses/ExpenseFormDialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -34,6 +37,8 @@ export default function GardenDetailPage() {
   const [editingBed, setEditingBed] = useState<Bed | undefined>()
   const [plantingFormOpen, setPlantingFormOpen] = useState(false)
   const [editingPlanting, setEditingPlanting] = useState<Planting | undefined>()
+  const [expenseFormOpen, setExpenseFormOpen] = useState(false)
+  const [editingExpense, setEditingExpense] = useState<Expense | undefined>()
   const [selectedYear, setSelectedYear] = useState(CURRENT_YEAR)
 
   const { data: garden, isLoading: gardenLoading } = useQuery({
@@ -57,6 +62,12 @@ export default function GardenDetailPage() {
   })
 
   const selectedSeason = seasons.find(s => s.year === selectedYear)
+
+  const { data: expenses = [], isLoading: expensesLoading } = useQuery({
+    queryKey: ['expenses', id, selectedYear],
+    queryFn: () => getExpenses(id, selectedYear),
+    enabled: !!selectedSeason,
+  })
 
   const deleteGardenMutation = useMutation({
     mutationFn: () => deleteGarden(id),
@@ -83,6 +94,11 @@ export default function GardenDetailPage() {
       qc.invalidateQueries({ queryKey: ['plantings', id, selectedYear] })
       qc.invalidateQueries({ queryKey: ['inventory'] })
     },
+  })
+
+  const deleteExpenseMutation = useMutation({
+    mutationFn: (expenseId: number) => deleteExpense(id, selectedYear, expenseId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['expenses', id, selectedYear] }),
   })
 
   function openEditBed(bed: Bed) {
@@ -120,6 +136,22 @@ export default function GardenDetailPage() {
   function handleDeletePlanting(planting: Planting) {
     if (confirm(`Remove ${planting.plantTypeName} — ${planting.plantVarietyName} from ${planting.bedName}?`)) {
       deletePlantingMutation.mutate({ year: selectedYear, plantingId: planting.id })
+    }
+  }
+
+  function openAddExpense() {
+    setEditingExpense(undefined)
+    setExpenseFormOpen(true)
+  }
+
+  function openEditExpense(expense: Expense) {
+    setEditingExpense(expense)
+    setExpenseFormOpen(true)
+  }
+
+  function handleDeleteExpense(expense: Expense) {
+    if (confirm(`Delete expense "${expense.description}"? This cannot be undone.`)) {
+      deleteExpenseMutation.mutate(expense.id)
     }
   }
 
@@ -215,6 +247,41 @@ export default function GardenDetailPage() {
         )}
       </div>
 
+      {/* Expenses */}
+      {selectedSeason && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <h2 className="text-lg font-medium">Expenses</h2>
+              {expenses.length > 0 && (
+                <span className="text-sm text-muted-foreground">
+                  ${expenses.reduce((sum, e) => sum + e.amount, 0).toFixed(2)} total
+                </span>
+              )}
+            </div>
+            <Button size="sm" onClick={openAddExpense}>Add Expense</Button>
+          </div>
+
+          {expensesLoading ? (
+            <p className="text-muted-foreground text-sm">Loading expenses…</p>
+          ) : expenses.length === 0 ? (
+            <p className="text-muted-foreground text-sm">No expenses yet.</p>
+          ) : (
+            <div className="space-y-2">
+              {expenses.map((expense) => (
+                <ExpenseRow
+                  key={expense.id}
+                  expense={expense}
+                  onEdit={openEditExpense}
+                  onDelete={handleDeleteExpense}
+                  isDeleting={deleteExpenseMutation.isPending}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Beds */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -280,7 +347,76 @@ export default function GardenDetailPage() {
         beds={beds}
         editing={editingPlanting}
       />
+      <ExpenseFormDialog
+        open={expenseFormOpen}
+        onClose={() => setExpenseFormOpen(false)}
+        gardenId={id}
+        year={selectedYear}
+        beds={beds}
+        editing={editingExpense}
+      />
     </div>
+  )
+}
+
+const CATEGORY_LABELS: Record<string, string> = {
+  Seeds: 'Seeds',
+  Transplants: 'Transplants',
+  Soil: 'Soil',
+  Fertilizer: 'Fertilizer',
+  PestControl: 'Pest Control',
+  BedMaterials: 'Bed Materials',
+  Tools: 'Tools',
+  Maintenance: 'Maintenance',
+  Other: 'Other',
+}
+
+function ExpenseRow({
+  expense,
+  onEdit,
+  onDelete,
+  isDeleting,
+}: {
+  expense: Expense
+  onEdit: (e: Expense) => void
+  onDelete: (e: Expense) => void
+  isDeleting: boolean
+}) {
+  return (
+    <Card>
+      <CardContent className="pt-3 pb-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="space-y-0.5 flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm font-medium">{expense.description}</span>
+              <Badge variant="secondary" className="text-xs">
+                {CATEGORY_LABELS[expense.category] ?? expense.category}
+              </Badge>
+              {expense.bedName && (
+                <Badge variant="outline" className="text-xs">{expense.bedName}</Badge>
+              )}
+            </div>
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <span>${expense.amount.toFixed(2)}</span>
+              <span>{expense.expenseDate}</span>
+              {expense.supplierName && <span>{expense.supplierName}</span>}
+            </div>
+          </div>
+          <div className="flex gap-1 shrink-0">
+            <Button variant="ghost" size="sm" onClick={() => onEdit(expense)}>Edit</Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-destructive hover:text-destructive"
+              onClick={() => onDelete(expense)}
+              disabled={isDeleting}
+            >
+              Delete
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   )
 }
 
