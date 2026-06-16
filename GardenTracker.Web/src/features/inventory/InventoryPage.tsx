@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getInventory, deleteInventoryItem, adjustInventoryRemaining } from '@/api/inventory'
+import { getInventory, deleteInventoryItem, adjustInventoryRemaining, exportInventoryCsv, importInventoryCsv } from '@/api/inventory'
 import type { InventoryItem } from '@/types/inventory'
 import InventoryFormDialog from './InventoryFormDialog'
 import { Button } from '@/components/ui/button'
@@ -14,11 +14,40 @@ export default function InventoryPage() {
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<InventoryItem | undefined>()
   const [selectedYear, setSelectedYear] = useState<number | 'all'>(CURRENT_YEAR)
+  const [importStatus, setImportStatus] = useState<{ created: number; updated: number; errors: string[] } | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const qc = useQueryClient()
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ['inventory'],
     queryFn: getInventory,
   })
+
+  const exportMutation = useMutation({
+    mutationFn: exportInventoryCsv,
+    onSuccess: (blob) => {
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `inventory-${new Date().toISOString().slice(0, 10)}.csv`
+      a.click()
+      URL.revokeObjectURL(url)
+    },
+  })
+
+  const importMutation = useMutation({
+    mutationFn: (file: File) => importInventoryCsv(file),
+    onSuccess: (result) => {
+      setImportStatus(result)
+      qc.invalidateQueries({ queryKey: ['inventory'] })
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    },
+  })
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (file) importMutation.mutate(file)
+  }
 
   function openAdd() {
     setEditing(undefined)
@@ -68,9 +97,31 @@ export default function InventoryPage() {
               ))}
             </select>
           )}
+          <Button size="sm" variant="outline" onClick={() => exportMutation.mutate()} disabled={exportMutation.isPending}>
+            {exportMutation.isPending ? 'Exporting…' : 'Export CSV'}
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={importMutation.isPending}>
+            {importMutation.isPending ? 'Importing…' : 'Import CSV'}
+          </Button>
+          <input ref={fileInputRef} type="file" accept=".csv" className="hidden" onChange={handleFileChange} />
           <Button size="sm" onClick={openAdd}>Add Item</Button>
         </div>
       </div>
+
+      {importStatus && (
+        <div className={`rounded-lg border px-4 py-3 text-sm ${importStatus.errors.length > 0 ? 'border-destructive bg-destructive/5' : 'border-green-500 bg-green-500/5'}`}>
+          <p className="font-medium">
+            Import complete: {importStatus.created} created, {importStatus.updated} updated
+            {importStatus.errors.length > 0 && `, ${importStatus.errors.length} error(s)`}
+          </p>
+          {importStatus.errors.length > 0 && (
+            <ul className="mt-1 space-y-0.5 text-destructive">
+              {importStatus.errors.map((e, i) => <li key={i}>• {e}</li>)}
+            </ul>
+          )}
+          <button onClick={() => setImportStatus(null)} className="mt-1 text-xs underline-offset-2 hover:underline text-muted-foreground">Dismiss</button>
+        </div>
+      )}
 
       {filtered.length === 0 ? (
         <p className="text-muted-foreground">

@@ -19,6 +19,13 @@ public class SupplierRepository(IConnectionFactory connectionFactory) : ISupplie
             "SELECT * FROM Suppliers WHERE Id = @Id", new { Id = id });
     }
 
+    public async Task<Supplier?> GetByNameAsync(string name)
+    {
+        using var conn = connectionFactory.CreateConnection();
+        return await conn.QuerySingleOrDefaultAsync<Supplier>(
+            "SELECT * FROM Suppliers WHERE Name = @Name", new { Name = name });
+    }
+
     public async Task<int> CreateAsync(Supplier supplier)
     {
         using var conn = connectionFactory.CreateConnection();

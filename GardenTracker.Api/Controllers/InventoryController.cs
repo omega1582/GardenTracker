@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace GardenTracker.Api.Controllers;
 
 [Route("api/v1/inventory")]
-public class InventoryController(IInventoryService inventoryService) : ApiControllerBase
+public class InventoryController(IInventoryService inventoryService, ICsvExportService csvExportService, ICsvImportService csvImportService) : ApiControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<IEnumerable<InventoryItemResponse>>> GetAll()
@@ -67,6 +67,24 @@ public class InventoryController(IInventoryService inventoryService) : ApiContro
     {
         var deleted = await inventoryService.DeleteAsync(id, CurrentUserId);
         return deleted ? NoContent() : NotFound();
+    }
+
+    [HttpGet("export")]
+    public async Task<IActionResult> Export()
+    {
+        var bytes = await csvExportService.ExportInventoryAsync(CurrentUserId);
+        return File(bytes, "text/csv", $"inventory-{DateOnly.FromDateTime(DateTime.UtcNow):yyyy-MM-dd}.csv");
+    }
+
+    [HttpPost("import")]
+    public async Task<IActionResult> Import(IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest(new { error = "No file provided." });
+
+        using var stream = file.OpenReadStream();
+        var result = await csvImportService.ImportInventoryAsync(CurrentUserId, stream);
+        return Ok(result);
     }
 
     private static InventoryItemResponse Map(InventoryItem i) => new()

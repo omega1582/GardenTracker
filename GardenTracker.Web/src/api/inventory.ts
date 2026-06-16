@@ -27,3 +27,23 @@ export async function adjustInventoryRemaining(id: number, newRemaining: number)
 export async function deleteInventoryItem(id: number): Promise<void> {
   await api.delete(`/api/v1/inventory/${id}`)
 }
+
+export async function exportInventoryCsv(): Promise<Blob> {
+  const res = await api.get('/api/v1/inventory/export', { responseType: 'blob' })
+  return res.data as Blob
+}
+
+export interface CsvImportResult {
+  created: number
+  updated: number
+  errors: string[]
+}
+
+export async function importInventoryCsv(file: File): Promise<CsvImportResult> {
+  const form = new FormData()
+  form.append('file', file)
+  const res = await api.post<CsvImportResult>('/api/v1/inventory/import', form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+  return res.data
+}
