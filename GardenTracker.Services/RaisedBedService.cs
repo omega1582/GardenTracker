@@ -52,4 +52,12 @@ public class BedService(IBedRepository bedRepository, IGardenRepository gardenRe
         logger.LogInformation("Bed {BedId} updated by user {UserId}", id, userId);
         return true;
     }
+
+    public async Task<bool> UpdatePositionAsync(int id, int userId, decimal? positionX, decimal? positionY)
+    {
+        var bed = await GetByIdAsync(id, userId);
+        if (bed == null) return false;
+        await bedRepository.UpdatePositionAsync(id, positionX, positionY);
+        return true;
+    }
 }

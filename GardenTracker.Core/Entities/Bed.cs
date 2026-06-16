@@ -12,6 +12,8 @@ public class Bed
     public int ExpectedLifespanYears { get; set; } = 10;
     public DateOnly InstalledDate { get; set; }
     public string? Notes { get; set; }
+    public decimal? PositionX { get; set; }
+    public decimal? PositionY { get; set; }
 
     public Garden Garden { get; set; } = null!;
     public ICollection<BedPlanting> Plantings { get; set; } = [];

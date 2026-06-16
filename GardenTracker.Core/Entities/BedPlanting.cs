@@ -16,6 +16,10 @@ public class BedPlanting
     public int? InventoryItemId { get; set; }
     public int? QuantityUsedFromInventory { get; set; }
     public string? Notes { get; set; }
+    public decimal? PositionX { get; set; }
+    public decimal? PositionY { get; set; }
+    public decimal? LayoutWidth { get; set; }
+    public decimal? LayoutHeight { get; set; }
 
     // Populated by JOIN queries in the repository — not persisted columns
     public string? BedName { get; set; }

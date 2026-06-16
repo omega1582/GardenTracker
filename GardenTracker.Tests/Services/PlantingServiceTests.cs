@@ -230,4 +230,42 @@ public class PlantingServiceTests
         // New item: 50 - 8 deducted = 42
         _inventoryRepo.Verify(r => r.UpdateRemainingQuantityAsync(6, 42), Times.Once);
     }
+
+    // ── Layout positioning ──────────────────────────────────────────────────
+
+    [Fact]
+    public async Task UpdateLayoutAsync_UpdatesLayout_WhenUserOwnsPlanting()
+    {
+        var planting = new BedPlanting { Id = 1, SeasonId = 10 };
+        _plantingRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(planting);
+        SetupOwnership(planting, userId: 42);
+
+        var result = await _sut.UpdateLayoutAsync(1, 42, 50m, 75m, 100m, 80m);
+
+        result.Should().BeTrue();
+        _plantingRepo.Verify(r => r.UpdateLayoutAsync(1, 50m, 75m, 100m, 80m), Times.Once);
+    }
+
+    [Fact]
+    public async Task UpdateLayoutAsync_ReturnsFalse_WhenUserDoesNotOwnPlanting()
+    {
+        var planting = new BedPlanting { Id = 1, SeasonId = 10 };
+        _plantingRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(planting);
+        SetupOwnership(planting, userId: 42);
+
+        var result = await _sut.UpdateLayoutAsync(1, 99, 50m, 75m, 100m, 80m);
+
+        result.Should().BeFalse();
+        _plantingRepo.Verify(r => r.UpdateLayoutAsync(It.IsAny<int>(), It.IsAny<decimal?>(), It.IsAny<decimal?>(), It.IsAny<decimal?>(), It.IsAny<decimal?>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task UpdateLayoutAsync_ReturnsFalse_WhenPlantingNotFound()
+    {
+        _plantingRepo.Setup(r => r.GetByIdAsync(99)).ReturnsAsync((BedPlanting?)null);
+
+        var result = await _sut.UpdateLayoutAsync(99, 42, 0m, 0m, 50m, 50m);
+
+        result.Should().BeFalse();
+    }
 }

@@ -104,6 +104,14 @@ public class PlantingService(
         return true;
     }
 
+    public async Task<bool> UpdateLayoutAsync(int id, int userId, decimal? positionX, decimal? positionY, decimal? width, decimal? height)
+    {
+        var planting = await GetByIdAsync(id, userId);
+        if (planting == null) return false;
+        await plantingRepository.UpdateLayoutAsync(id, positionX, positionY, width, height);
+        return true;
+    }
+
     public async Task<bool> DeleteAsync(int id, int userId)
     {
         var planting = await GetByIdAsync(id, userId);

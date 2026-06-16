@@ -8,4 +8,5 @@ public interface IBedRepository
     Task<Bed?> GetByIdAsync(int id);
     Task<int> CreateAsync(Bed bed);
     Task UpdateAsync(Bed bed);
+    Task UpdatePositionAsync(int id, decimal? positionX, decimal? positionY);
 }

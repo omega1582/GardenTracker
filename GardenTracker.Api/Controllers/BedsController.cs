@@ -44,11 +44,18 @@ public class BedsController(IBedService bedService) : ApiControllerBase
         return updated ? NoContent() : NotFound();
     }
 
+    [HttpPatch("{id:int}/position")]
+    public async Task<IActionResult> UpdatePosition(int gardenId, int id, UpdateBedPositionRequest request)
+    {
+        var updated = await bedService.UpdatePositionAsync(id, CurrentUserId, request.PositionX, request.PositionY);
+        return updated ? NoContent() : NotFound();
+    }
+
     private static BedResponse Map(Bed b) => new()
     {
         Id = b.Id, GardenId = b.GardenId, Name = b.Name, LengthFt = b.LengthFt,
         WidthFt = b.WidthFt, DepthIn = b.DepthIn, Material = b.Material,
         ExpectedLifespanYears = b.ExpectedLifespanYears, InstalledDate = b.InstalledDate,
-        Notes = b.Notes
+        Notes = b.Notes, PositionX = b.PositionX, PositionY = b.PositionY
     };
 }

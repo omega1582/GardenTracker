@@ -12,4 +12,6 @@ public class BedResponse
     public int ExpectedLifespanYears { get; set; }
     public DateOnly InstalledDate { get; set; }
     public string? Notes { get; set; }
+    public decimal? PositionX { get; set; }
+    public decimal? PositionY { get; set; }
 }

@@ -17,6 +17,10 @@ export interface Planting {
   notes?: string | null
   inventoryItemId?: number | null
   quantityUsedFromInventory?: number | null
+  positionX?: number | null
+  positionY?: number | null
+  layoutWidth?: number | null
+  layoutHeight?: number | null
 }
 
 export interface CreatePlantingRequest {

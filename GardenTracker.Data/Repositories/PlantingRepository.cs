@@ -41,9 +41,9 @@ public class PlantingRepository(IConnectionFactory connectionFactory) : IPlantin
         using var conn = connectionFactory.CreateConnection();
         return await conn.ExecuteScalarAsync<int>(
             """
-            INSERT INTO BedPlantings (BedId, SeasonId, PlantVarietyId, SupplierId, StartMethod, Quantity, TotalCost, SourceHarvestId, Notes, InventoryItemId, QuantityUsedFromInventory)
+            INSERT INTO BedPlantings (BedId, SeasonId, PlantVarietyId, SupplierId, StartMethod, Quantity, TotalCost, SourceHarvestId, Notes, InventoryItemId, QuantityUsedFromInventory, PositionX, PositionY, LayoutWidth, LayoutHeight)
             OUTPUT INSERTED.Id
-            VALUES (@BedId, @SeasonId, @PlantVarietyId, @SupplierId, @StartMethod, @Quantity, @TotalCost, @SourceHarvestId, @Notes, @InventoryItemId, @QuantityUsedFromInventory)
+            VALUES (@BedId, @SeasonId, @PlantVarietyId, @SupplierId, @StartMethod, @Quantity, @TotalCost, @SourceHarvestId, @Notes, @InventoryItemId, @QuantityUsedFromInventory, @PositionX, @PositionY, @LayoutWidth, @LayoutHeight)
             """,
             planting);
     }
@@ -60,6 +60,14 @@ public class PlantingRepository(IConnectionFactory connectionFactory) : IPlantin
             WHERE Id = @Id
             """,
             planting);
+    }
+
+    public async Task UpdateLayoutAsync(int id, decimal? positionX, decimal? positionY, decimal? width, decimal? height)
+    {
+        using var conn = connectionFactory.CreateConnection();
+        await conn.ExecuteAsync(
+            "UPDATE BedPlantings SET PositionX = @PositionX, PositionY = @PositionY, LayoutWidth = @Width, LayoutHeight = @Height WHERE Id = @Id",
+            new { Id = id, PositionX = positionX, PositionY = positionY, Width = width, Height = height });
     }
 
     public async Task DeleteAsync(int id)

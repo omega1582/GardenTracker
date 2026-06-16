@@ -8,5 +8,6 @@ public interface IPlantingRepository
     Task<BedPlanting?> GetByIdAsync(int id);
     Task<int> CreateAsync(BedPlanting planting);
     Task UpdateAsync(BedPlanting planting);
+    Task UpdateLayoutAsync(int id, decimal? positionX, decimal? positionY, decimal? width, decimal? height);
     Task DeleteAsync(int id);
 }

@@ -29,3 +29,17 @@ export async function updatePlanting(
 export async function deletePlanting(gardenId: number, year: number, id: number): Promise<void> {
   await api.delete(`/api/v1/gardens/${gardenId}/seasons/${year}/plantings/${id}`)
 }
+
+export async function updatePlantingLayout(
+  gardenId: number,
+  year: number,
+  id: number,
+  positionX: number | null,
+  positionY: number | null,
+  layoutWidth: number | null,
+  layoutHeight: number | null
+): Promise<void> {
+  await api.patch(`/api/v1/gardens/${gardenId}/seasons/${year}/plantings/${id}/layout`, {
+    positionX, positionY, layoutWidth, layoutHeight,
+  })
+}

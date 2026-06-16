@@ -9,6 +9,8 @@ export interface Bed {
   expectedLifespanYears: number
   installedDate: string   // ISO date string (YYYY-MM-DD)
   notes: string | null
+  positionX: number | null
+  positionY: number | null
 }
 
 export interface CreateBedRequest {

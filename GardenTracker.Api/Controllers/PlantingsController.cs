@@ -48,6 +48,13 @@ public class PlantingsController(IPlantingService plantingService) : ApiControll
         return updated ? NoContent() : NotFound();
     }
 
+    [HttpPatch("{id:int}/layout")]
+    public async Task<IActionResult> UpdateLayout(int gardenId, int year, int id, UpdatePlantingLayoutRequest request)
+    {
+        var updated = await plantingService.UpdateLayoutAsync(id, CurrentUserId, request.PositionX, request.PositionY, request.LayoutWidth, request.LayoutHeight);
+        return updated ? NoContent() : NotFound();
+    }
+
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int gardenId, int year, int id)
     {
@@ -64,6 +71,8 @@ public class PlantingsController(IPlantingService plantingService) : ApiControll
         SupplierId = p.SupplierId, SupplierName = p.SupplierName,
         StartMethod = p.StartMethod, Quantity = p.Quantity, TotalCost = p.TotalCost,
         SourceHarvestId = p.SourceHarvestId, Notes = p.Notes,
-        InventoryItemId = p.InventoryItemId, QuantityUsedFromInventory = p.QuantityUsedFromInventory
+        InventoryItemId = p.InventoryItemId, QuantityUsedFromInventory = p.QuantityUsedFromInventory,
+        PositionX = p.PositionX, PositionY = p.PositionY,
+        LayoutWidth = p.LayoutWidth, LayoutHeight = p.LayoutHeight
     };
 }

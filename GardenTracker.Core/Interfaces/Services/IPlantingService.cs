@@ -9,5 +9,6 @@ public interface IPlantingService
     Task<BedPlanting?> GetByIdAsync(int id, int userId);
     Task<BedPlanting> CreateAsync(int gardenId, int year, int userId, BedPlanting planting, int? quantityUsedFromInventory);
     Task<bool> UpdateAsync(int id, int userId, int? supplierId, StartMethod startMethod, int quantity, decimal totalCost, int? sourceHarvestId, string? notes, int? inventoryItemId, int? quantityUsedFromInventory);
+    Task<bool> UpdateLayoutAsync(int id, int userId, decimal? positionX, decimal? positionY, decimal? width, decimal? height);
     Task<bool> DeleteAsync(int id, int userId);
 }

@@ -8,4 +8,5 @@ public interface IBedService
     Task<Bed?> GetByIdAsync(int id, int userId);
     Task<Bed> CreateAsync(int gardenId, int userId, Bed bed);
     Task<bool> UpdateAsync(int id, int userId, string name, string? material, int expectedLifespanYears, string? notes);
+    Task<bool> UpdatePositionAsync(int id, int userId, decimal? positionX, decimal? positionY);
 }

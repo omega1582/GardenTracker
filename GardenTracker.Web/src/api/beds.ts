@@ -18,3 +18,12 @@ export async function updateBed(gardenId: number, id: number, data: UpdateBedReq
 export async function deleteBed(gardenId: number, id: number): Promise<void> {
   await api.delete(`/api/v1/gardens/${gardenId}/beds/${id}`)
 }
+
+export async function updateBedPosition(
+  gardenId: number,
+  id: number,
+  positionX: number | null,
+  positionY: number | null
+): Promise<void> {
+  await api.patch(`/api/v1/gardens/${gardenId}/beds/${id}/position`, { positionX, positionY })
+}

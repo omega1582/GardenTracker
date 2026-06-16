@@ -27,9 +27,9 @@ public class BedRepository(IConnectionFactory connectionFactory) : IBedRepositor
         using var conn = connectionFactory.CreateConnection();
         return await conn.ExecuteScalarAsync<int>(
             """
-            INSERT INTO Beds (GardenId, Name, LengthFt, WidthFt, DepthIn, Material, ExpectedLifespanYears, InstalledDate, Notes)
+            INSERT INTO Beds (GardenId, Name, LengthFt, WidthFt, DepthIn, Material, ExpectedLifespanYears, InstalledDate, Notes, PositionX, PositionY)
             OUTPUT INSERTED.Id
-            VALUES (@GardenId, @Name, @LengthFt, @WidthFt, @DepthIn, @Material, @ExpectedLifespanYears, @InstalledDate, @Notes)
+            VALUES (@GardenId, @Name, @LengthFt, @WidthFt, @DepthIn, @Material, @ExpectedLifespanYears, @InstalledDate, @Notes, @PositionX, @PositionY)
             """,
             bed);
     }
@@ -45,6 +45,14 @@ public class BedRepository(IConnectionFactory connectionFactory) : IBedRepositor
             WHERE Id = @Id
             """,
             bed);
+    }
+
+    public async Task UpdatePositionAsync(int id, decimal? positionX, decimal? positionY)
+    {
+        using var conn = connectionFactory.CreateConnection();
+        await conn.ExecuteAsync(
+            "UPDATE Beds SET PositionX = @PositionX, PositionY = @PositionY WHERE Id = @Id",
+            new { Id = id, PositionX = positionX, PositionY = positionY });
     }
 
 }

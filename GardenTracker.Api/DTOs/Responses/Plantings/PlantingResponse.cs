@@ -20,4 +20,8 @@ public class PlantingResponse
     public string? Notes { get; set; }
     public int? InventoryItemId { get; set; }
     public int? QuantityUsedFromInventory { get; set; }
+    public decimal? PositionX { get; set; }
+    public decimal? PositionY { get; set; }
+    public decimal? LayoutWidth { get; set; }
+    public decimal? LayoutHeight { get; set; }
 }

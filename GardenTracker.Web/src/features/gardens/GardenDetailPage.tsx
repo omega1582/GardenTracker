@@ -14,6 +14,7 @@ import type { Expense } from '@/types/expense'
 import type { Harvest } from '@/types/harvest'
 import type { MarketPrice } from '@/types/marketPrice'
 import GardenFormDialog from './GardenFormDialog'
+import GardenLayoutView from './GardenLayoutView'
 import BedFormDialog from '@/features/beds/BedFormDialog'
 import PlantingFormDialog from '@/features/plantings/PlantingFormDialog'
 import ExpenseFormDialog from '@/features/expenses/ExpenseFormDialog'
@@ -50,6 +51,7 @@ export default function GardenDetailPage() {
   const [marketPriceFormOpen, setMarketPriceFormOpen] = useState(false)
   const [editingMarketPrice, setEditingMarketPrice] = useState<MarketPrice | undefined>()
   const [selectedYear, setSelectedYear] = useState(CURRENT_YEAR)
+  const [activeTab, setActiveTab] = useState<'detail' | 'layout'>('detail')
 
   const { data: garden, isLoading: gardenLoading } = useQuery({
     queryKey: ['gardens', id],
@@ -247,6 +249,31 @@ export default function GardenDetailPage() {
           </Button>
         </div>
       </div>
+
+      {/* Tab bar */}
+      <div className="flex gap-1 border-b border-border">
+        {(['detail', 'layout'] as const).map(tab => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-4 py-2 text-sm font-medium capitalize border-b-2 -mb-px transition-colors ${
+              activeTab === tab
+                ? 'border-primary text-foreground'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            {tab === 'layout' ? 'Garden Layout' : 'Details'}
+          </button>
+        ))}
+      </div>
+
+      {/* Layout tab */}
+      {activeTab === 'layout' && (
+        <GardenLayoutView gardenId={id} beds={beds} />
+      )}
+
+      {/* Details tab content */}
+      {activeTab === 'detail' && <>
 
       {/* Season + Plantings */}
       <div className="space-y-4">
@@ -460,6 +487,8 @@ export default function GardenDetailPage() {
           </div>
         )}
       </div>
+
+      </>}
 
       <GardenFormDialog
         open={editGardenOpen}
