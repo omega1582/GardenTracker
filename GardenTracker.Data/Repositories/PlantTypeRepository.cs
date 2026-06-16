@@ -19,11 +19,22 @@ public class PlantTypeRepository(IConnectionFactory connectionFactory) : IPlantT
             "SELECT * FROM PlantTypes WHERE Id = @Id", new { Id = id });
     }
 
+    public async Task<PlantType?> GetByNameAsync(string name)
+    {
+        using var conn = connectionFactory.CreateConnection();
+        return await conn.QuerySingleOrDefaultAsync<PlantType>(
+            "SELECT * FROM PlantTypes WHERE Name = @Name", new { Name = name });
+    }
+
     public async Task<int> CreateAsync(PlantType plantType)
     {
         using var conn = connectionFactory.CreateConnection();
         return await conn.ExecuteScalarAsync<int>(
-            "INSERT INTO PlantTypes (Name) OUTPUT INSERTED.Id VALUES (@Name)",
+            """
+            INSERT INTO PlantTypes (Name, GrowthHabit, DaysToMaturity, SpacingInches, SunPreference, IsPerennial)
+            OUTPUT INSERTED.Id
+            VALUES (@Name, @GrowthHabit, @DaysToMaturity, @SpacingInches, @SunPreference, @IsPerennial)
+            """,
             plantType);
     }
 
@@ -31,6 +42,12 @@ public class PlantTypeRepository(IConnectionFactory connectionFactory) : IPlantT
     {
         using var conn = connectionFactory.CreateConnection();
         await conn.ExecuteAsync(
-            "UPDATE PlantTypes SET Name = @Name WHERE Id = @Id", plantType);
+            """
+            UPDATE PlantTypes
+            SET Name = @Name, GrowthHabit = @GrowthHabit, DaysToMaturity = @DaysToMaturity,
+                SpacingInches = @SpacingInches, SunPreference = @SunPreference, IsPerennial = @IsPerennial
+            WHERE Id = @Id
+            """,
+            plantType);
     }
 }

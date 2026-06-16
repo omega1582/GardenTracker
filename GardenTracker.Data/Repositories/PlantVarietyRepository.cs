@@ -21,14 +21,22 @@ public class PlantVarietyRepository(IConnectionFactory connectionFactory) : IPla
             "SELECT * FROM PlantVarieties WHERE Id = @Id", new { Id = id });
     }
 
+    public async Task<PlantVariety?> GetByPlantTypeAndNameAsync(int plantTypeId, string name)
+    {
+        using var conn = connectionFactory.CreateConnection();
+        return await conn.QuerySingleOrDefaultAsync<PlantVariety>(
+            "SELECT * FROM PlantVarieties WHERE PlantTypeId = @PlantTypeId AND Name = @Name",
+            new { PlantTypeId = plantTypeId, Name = name });
+    }
+
     public async Task<int> CreateAsync(PlantVariety variety)
     {
         using var conn = connectionFactory.CreateConnection();
         return await conn.ExecuteScalarAsync<int>(
             """
-            INSERT INTO PlantVarieties (PlantTypeId, Name, Notes)
+            INSERT INTO PlantVarieties (PlantTypeId, Name, Notes, GrowthHabit, DaysToMaturity, SpacingInches, SunPreference, IsPerennial)
             OUTPUT INSERTED.Id
-            VALUES (@PlantTypeId, @Name, @Notes)
+            VALUES (@PlantTypeId, @Name, @Notes, @GrowthHabit, @DaysToMaturity, @SpacingInches, @SunPreference, @IsPerennial)
             """,
             variety);
     }
@@ -37,6 +45,12 @@ public class PlantVarietyRepository(IConnectionFactory connectionFactory) : IPla
     {
         using var conn = connectionFactory.CreateConnection();
         await conn.ExecuteAsync(
-            "UPDATE PlantVarieties SET Name = @Name, Notes = @Notes WHERE Id = @Id", variety);
+            """
+            UPDATE PlantVarieties
+            SET Name = @Name, Notes = @Notes, GrowthHabit = @GrowthHabit, DaysToMaturity = @DaysToMaturity,
+                SpacingInches = @SpacingInches, SunPreference = @SunPreference, IsPerennial = @IsPerennial
+            WHERE Id = @Id
+            """,
+            variety);
     }
 }

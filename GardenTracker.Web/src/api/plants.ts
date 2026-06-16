@@ -1,18 +1,37 @@
 import api from '@/lib/axios'
-import type { PlantType, PlantVariety } from '@/types/plant'
+import type { PlantType, PlantVariety, GrowthHabit, SunPreference } from '@/types/plant'
+
+export interface PlantTypePayload {
+  name: string
+  growthHabit?: GrowthHabit | null
+  daysToMaturity?: number | null
+  spacingInches?: number | null
+  sunPreference?: SunPreference | null
+  isPerennial?: boolean | null
+}
+
+export interface PlantVarietyPayload {
+  name: string
+  notes?: string | null
+  growthHabit?: GrowthHabit | null
+  daysToMaturity?: number | null
+  spacingInches?: number | null
+  sunPreference?: SunPreference | null
+  isPerennial?: boolean | null
+}
 
 export async function getPlantTypes(): Promise<PlantType[]> {
   const res = await api.get<PlantType[]>('/api/v1/plant-types')
   return res.data
 }
 
-export async function createPlantType(name: string): Promise<PlantType> {
-  const res = await api.post<PlantType>('/api/v1/plant-types', { name })
+export async function createPlantType(data: PlantTypePayload): Promise<PlantType> {
+  const res = await api.post<PlantType>('/api/v1/plant-types', data)
   return res.data
 }
 
-export async function updatePlantType(id: number, name: string): Promise<void> {
-  await api.put(`/api/v1/plant-types/${id}`, { name })
+export async function updatePlantType(id: number, data: PlantTypePayload): Promise<void> {
+  await api.put(`/api/v1/plant-types/${id}`, data)
 }
 
 export async function getVarieties(plantTypeId: number): Promise<PlantVariety[]> {
@@ -20,17 +39,11 @@ export async function getVarieties(plantTypeId: number): Promise<PlantVariety[]>
   return res.data
 }
 
-export async function createVariety(
-  plantTypeId: number,
-  data: { name: string; notes?: string }
-): Promise<PlantVariety> {
+export async function createVariety(plantTypeId: number, data: PlantVarietyPayload): Promise<PlantVariety> {
   const res = await api.post<PlantVariety>(`/api/v1/plant-types/${plantTypeId}/varieties`, data)
   return res.data
 }
 
-export async function updateVariety(
-  id: number,
-  data: { name: string; notes?: string }
-): Promise<void> {
+export async function updateVariety(id: number, data: PlantVarietyPayload): Promise<void> {
   await api.put(`/api/v1/plant-varieties/${id}`, data)
 }

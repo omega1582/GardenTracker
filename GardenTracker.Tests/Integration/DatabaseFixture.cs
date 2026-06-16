@@ -32,6 +32,8 @@ public class DatabaseFixture : IAsyncLifetime
 
         // Register the DateOnly type handler once — safe to call multiple times
         SqlMapper.AddTypeHandler(new DateOnlyTypeHandler());
+        SqlMapper.AddTypeHandler(new StringEnumTypeHandler<GardenTracker.Core.Enums.GrowthHabit>());
+        SqlMapper.AddTypeHandler(new StringEnumTypeHandler<GardenTracker.Core.Enums.SunPreference>());
 
         ConnectionFactory = new TestConnectionFactory(_container.GetConnectionString());
     }

@@ -14,6 +14,8 @@ public static class ServiceRegistration
     public static IServiceCollection AddDataServices(this IServiceCollection services, IConfiguration configuration)
     {
         SqlMapper.AddTypeHandler(new DateOnlyTypeHandler());
+        SqlMapper.AddTypeHandler(new StringEnumTypeHandler<GardenTracker.Core.Enums.GrowthHabit>());
+        SqlMapper.AddTypeHandler(new StringEnumTypeHandler<GardenTracker.Core.Enums.SunPreference>());
 
         services.AddDbContext<GardenTrackerDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));

@@ -4,6 +4,7 @@ using GardenTracker.Data.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GardenTracker.Data.Migrations
 {
     [DbContext(typeof(GardenTrackerDbContext))]
-    partial class GardenTrackerDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260616024321_AddExtendedPlantAttributes")]
+    partial class AddExtendedPlantAttributes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -59,12 +62,6 @@ namespace GardenTracker.Data.Migrations
                     b.Property<string>("Notes")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<decimal?>("PositionX")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal?>("PositionY")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<decimal>("WidthFt")
                         .HasPrecision(6, 2)
                         .HasColumnType("decimal(6,2)");
@@ -90,23 +87,11 @@ namespace GardenTracker.Data.Migrations
                     b.Property<int?>("InventoryItemId")
                         .HasColumnType("int");
 
-                    b.Property<decimal?>("LayoutHeight")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal?>("LayoutWidth")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<string>("Notes")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("PlantVarietyId")
                         .HasColumnType("int");
-
-                    b.Property<decimal?>("PositionX")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal?>("PositionY")
-                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
