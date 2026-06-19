@@ -4,11 +4,11 @@ import { useAuth } from '@/features/auth/AuthContext'
 import { toggleTheme, getCurrentTheme } from '@/lib/theme'
 
 const NAV_LINKS = [
-  { to: '/gardens',    label: 'Gardens'    },
-  { to: '/plants',     label: 'Plants'     },
-  { to: '/inventory',  label: 'Inventory'  },
-  { to: '/water-bills',label: 'Water'      },
-  { to: '/reports',    label: 'Reports'    },
+  { to: '/gardens',     label: 'Gardens'   },
+  { to: '/plants',      label: 'Plants'    },
+  { to: '/inventory',   label: 'Inventory' },
+  { to: '/water-bills', label: 'Water'     },
+  { to: '/reports',     label: 'Reports'   },
 ]
 
 export default function AppShell() {
@@ -24,24 +24,13 @@ export default function AppShell() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* ── Header ──────────────────────────────────────────────────── */}
-      <header
-        style={{ backgroundColor: 'var(--nav-bg)', borderColor: 'var(--nav-accent)' }}
-        className="sticky top-0 z-40 border-b"
-      >
-        <div
-          className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4 gap-8"
-        >
+      <header className="sticky top-0 z-40 bg-white dark:bg-slate-900 border-b border-border">
+        <div className="mx-auto flex h-14 max-w-5xl items-center gap-8 px-4">
+
           {/* Brand */}
-          <Link
-            to="/"
-            className="flex items-center gap-2.5 shrink-0 group"
-          >
-            <LeafMark />
-            <span
-              className="heading-serif text-xl font-semibold italic tracking-tight"
-              style={{ color: 'var(--nav-fg)' }}
-            >
+          <Link to="/" className="flex items-center gap-2 shrink-0">
+            <SproutIcon />
+            <span className="text-base font-semibold tracking-tight text-foreground">
               Garden Tracker
             </span>
           </Link>
@@ -54,19 +43,13 @@ export default function AppShell() {
                 <Link
                   key={to}
                   to={to}
-                  className="relative px-3 py-1.5 text-sm transition-colors"
-                  style={{
-                    color: active ? 'var(--nav-fg)' : 'var(--nav-fg-muted)',
-                    fontWeight: active ? 500 : 400,
-                  }}
+                  className={`px-3 py-1.5 rounded-md text-sm transition-colors ${
+                    active
+                      ? 'bg-slate-100 dark:bg-slate-800 text-foreground font-medium'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-slate-50 dark:hover:bg-slate-800'
+                  }`}
                 >
                   {label}
-                  {active && (
-                    <span
-                      className="absolute bottom-0 left-3 right-3 h-px"
-                      style={{ backgroundColor: 'var(--nav-accent)' }}
-                    />
-                  )}
                 </Link>
               )
             })}
@@ -75,8 +58,7 @@ export default function AppShell() {
           {/* Theme toggle */}
           <button
             onClick={() => setTheme(toggleTheme())}
-            className="text-sm transition-colors shrink-0 p-1.5 rounded"
-            style={{ color: 'var(--nav-fg-muted)' }}
+            className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
           >
@@ -86,25 +68,28 @@ export default function AppShell() {
           {/* Sign out */}
           <button
             onClick={handleSignOut}
-            className="text-sm transition-colors shrink-0"
-            style={{ color: 'var(--nav-fg-subtle)' }}
-            onMouseEnter={(e) =>
-              ((e.target as HTMLElement).style.color = 'var(--nav-fg)')
-            }
-            onMouseLeave={(e) =>
-              ((e.target as HTMLElement).style.color = 'var(--nav-fg-subtle)')
-            }
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors shrink-0"
           >
             Sign out
           </button>
         </div>
       </header>
 
-      {/* ── Content ─────────────────────────────────────────────────── */}
       <main className="mx-auto max-w-5xl px-4 py-8">
         <Outlet />
       </main>
     </div>
+  )
+}
+
+function SproutIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-600" aria-hidden>
+      <path d="M7 20h10"/>
+      <path d="M10 20c5.5-2.5 4-6 3-8"/>
+      <path d="M9 6.8A6 6 0 0 0 3 12c0 0 0 0 0 0h10c0-5.5-3-8.5-4-5.2z"/>
+      <path d="M21 12h-2a6 6 0 0 0-5 7"/>
+    </svg>
   )
 }
 
@@ -121,46 +106,6 @@ function MoonIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
-    </svg>
-  )
-}
-
-function LeafMark() {
-  return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 20 20"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden
-    >
-      {/* Simple botanical leaf — two strokes, minimal */}
-      <path
-        d="M10 18 C10 18 3 14 3 7 C3 4 6 2 10 2 C14 2 17 4 17 7 C17 14 10 18 10 18Z"
-        fill="oklch(0.62 0.140 43)"
-        opacity="0.9"
-      />
-      <path
-        d="M10 18 L10 8"
-        stroke="oklch(0.22 0.07 155)"
-        strokeWidth="1"
-        strokeLinecap="round"
-      />
-      <path
-        d="M10 11 C10 11 7 9.5 6 7"
-        stroke="oklch(0.22 0.07 155)"
-        strokeWidth="0.75"
-        strokeLinecap="round"
-        opacity="0.6"
-      />
-      <path
-        d="M10 13 C10 13 13 11.5 14 9"
-        stroke="oklch(0.22 0.07 155)"
-        strokeWidth="0.75"
-        strokeLinecap="round"
-        opacity="0.6"
-      />
     </svg>
   )
 }
