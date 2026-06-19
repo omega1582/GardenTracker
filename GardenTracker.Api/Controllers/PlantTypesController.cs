@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace GardenTracker.Api.Controllers;
 
 [Route("api/v1/plant-types")]
-public class PlantTypesController(IPlantTypeService plantTypeService, IPlantVarietyService plantVarietyService) : ApiControllerBase
+public class PlantTypesController(IPlantTypeService plantTypeService, IPlantVarietyService plantVarietyService, IPlantCatalogCsvImportService csvImportService) : ApiControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<IEnumerable<PlantTypeResponse>>> GetAll()
@@ -55,6 +55,17 @@ public class PlantTypesController(IPlantTypeService plantTypeService, IPlantVari
         if (type == null) return NotFound();
         var variety = await plantVarietyService.CreateAsync(id, request.Name, request.Notes, request.GrowthHabit, request.DaysToMaturity, request.SpacingInches, request.SunPreference, request.IsPerennial);
         return CreatedAtAction(nameof(GetVarieties), new { id }, ToVarietyResponse(variety, type.Name));
+    }
+
+    [HttpPost("import")]
+    public async Task<IActionResult> Import(IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest(new { error = "No file provided." });
+
+        using var stream = file.OpenReadStream();
+        var result = await csvImportService.ImportAsync(stream);
+        return Ok(result);
     }
 
     private static PlantTypeResponse ToResponse(PlantType t) => new()

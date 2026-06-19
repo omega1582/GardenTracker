@@ -1,0 +1,15 @@
+PlantTypeName,PlantVarietyName,GrowthHabit,DaysToMaturity,SpacingInches,SunPreference,IsPerennial,Notes
+Tomato,,Vining,,,FullSun,false,
+Tomato,Roma,Vining,75,18,FullSun,false,Paste tomato great for sauce
+Tomato,Cherokee Purple,Vining,80,24,FullSun,false,Heirloom with rich complex flavor
+Tomato,Sun Gold,Vining,65,18,FullSun,false,Cherry tomato with exceptional sweetness
+Pepper,,Upright,,,FullSun,false,
+Pepper,Jalapeño,Upright,75,18,FullSun,false,Medium heat
+Pepper,Bell Red,Upright,85,18,FullSun,false,Sweet red bell pepper
+Lettuce,Butterhead,,55,8,PartialSun,false,
+Lettuce,Romaine,,70,6,PartialSun,false,Crisp upright leaves
+Lettuce,Red Leaf,,45,6,PartialSun,false,Loose-leaf good for cut-and-come-again
+Zucchini,Black Beauty,Vining,50,36,FullSun,false,Classic dark green summer squash
+Basil,Genovese,Upright,60,12,FullSun,false,Classic Italian basil for pesto
+Kale,Lacinato,Upright,60,18,FullSun,true,Also called Dinosaur or Tuscan kale
+Cucumber,Straight Eight,Vining,58,12,FullSun,false,

@@ -1,6 +1,6 @@
-import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { getPlantTypes, getVarieties } from '@/api/plants'
+import { useState, useRef } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { getPlantTypes, getVarieties, importPlantCatalogCsv } from '@/api/plants'
 import type { PlantType, PlantVariety, SunPreference } from '@/types/plant'
 import PlantTypeFormDialog from './PlantTypeFormDialog'
 import PlantVarietyFormDialog from './PlantVarietyFormDialog'
@@ -26,13 +26,35 @@ function formatAttributes(item: {
 }
 
 export default function PlantsPage() {
+  const queryClient = useQueryClient()
   const [typeFormOpen, setTypeFormOpen] = useState(false)
   const [editingType, setEditingType] = useState<PlantType | undefined>()
+  const [importStatus, setImportStatus] = useState<{ created: number; updated: number; errors: string[] } | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const { data: plantTypes = [], isLoading } = useQuery({
     queryKey: ['plant-types'],
     queryFn: getPlantTypes,
   })
+
+  const importMutation = useMutation({
+    mutationFn: (file: File) => importPlantCatalogCsv(file),
+    onSuccess: (result) => {
+      setImportStatus(result)
+      queryClient.invalidateQueries({ queryKey: ['plant-types'] })
+      queryClient.invalidateQueries({ queryKey: ['varieties'] })
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    },
+    onError: (err: Error) => {
+      setImportStatus({ created: 0, updated: 0, errors: [err.message ?? 'Import failed. Check the API is running.'] })
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    },
+  })
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (file) importMutation.mutate(file)
+  }
 
   function openAddType() {
     setEditingType(undefined)
@@ -50,8 +72,28 @@ export default function PlantsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold tracking-tight">Plants</h1>
-        <Button size="sm" onClick={openAddType}>Add Plant Type</Button>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={importMutation.isPending}>
+            {importMutation.isPending ? 'Importing…' : 'Import CSV'}
+          </Button>
+          <input ref={fileInputRef} type="file" accept=".csv" className="hidden" onChange={handleFileChange} />
+          <Button size="sm" onClick={openAddType}>Add Plant Type</Button>
+        </div>
       </div>
+
+      {importStatus && (
+        <div className={`rounded-lg border px-4 py-3 text-sm ${importStatus.errors.length > 0 ? 'border-destructive bg-destructive/5' : 'border-green-500 bg-green-500/5'}`}>
+          <p className="font-medium">
+            Import complete: {importStatus.created} created, {importStatus.updated} updated
+            {importStatus.errors.length > 0 && `, ${importStatus.errors.length} error(s)`}
+          </p>
+          {importStatus.errors.length > 0 && (
+            <ul className="mt-1 text-muted-foreground">
+              {importStatus.errors.map((e, i) => <li key={i}>• {e}</li>)}
+            </ul>
+          )}
+        </div>
+      )}
 
       {plantTypes.length === 0 ? (
         <p className="text-muted-foreground">No plant types yet. Add your first one!</p>

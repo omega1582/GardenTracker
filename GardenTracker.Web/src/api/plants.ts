@@ -1,5 +1,6 @@
 import api from '@/lib/axios'
 import type { PlantType, PlantVariety, GrowthHabit, SunPreference } from '@/types/plant'
+import type { CsvImportResult } from './inventory'
 
 export interface PlantTypePayload {
   name: string
@@ -46,4 +47,13 @@ export async function createVariety(plantTypeId: number, data: PlantVarietyPaylo
 
 export async function updateVariety(id: number, data: PlantVarietyPayload): Promise<void> {
   await api.put(`/api/v1/plant-varieties/${id}`, data)
+}
+
+export async function importPlantCatalogCsv(file: File): Promise<CsvImportResult> {
+  const form = new FormData()
+  form.append('file', file)
+  const res = await api.post<CsvImportResult>('/api/v1/plant-types/import', form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+  return res.data
 }
