@@ -1,0 +1,13 @@
+Year,Month,UsageCcf,UsageGallons,TotalCost,IsGardenActive,Notes
+2025,1,4.1,3067,51.25,false,
+2025,2,3.9,2917,49.00,false,
+2025,3,4.3,3216,53.75,false,
+2025,4,5.8,4337,68.50,true,Spring planting started
+2025,5,7.2,5384,83.00,true,
+2025,6,9.4,7029,106.50,true,Hot and dry
+2025,7,11.1,8302,124.75,true,Peak summer
+2025,8,10.6,7928,119.00,true,
+2025,9,8.3,6207,94.25,true,Winding down
+2025,10,5.1,3814,62.00,true,Fall crops
+2025,11,4.0,2992,50.00,false,
+2025,12,3.8,2842,47.50,false,
