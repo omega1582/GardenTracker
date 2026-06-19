@@ -7,6 +7,7 @@ public class CreatePlantTypeRequest
 {
     [Required, MaxLength(100)]
     public string Name { get; set; } = string.Empty;
+    public PlantCategory Category { get; set; } = PlantCategory.Other;
     public GrowthHabit? GrowthHabit { get; set; }
     public int? DaysToMaturity { get; set; }
     public int? SpacingInches { get; set; }

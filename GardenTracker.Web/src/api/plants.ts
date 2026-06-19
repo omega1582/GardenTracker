@@ -4,6 +4,7 @@ import type { CsvImportResult } from './inventory'
 
 export interface PlantTypePayload {
   name: string
+  category: string
   growthHabit?: GrowthHabit | null
   daysToMaturity?: number | null
   spacingInches?: number | null
@@ -37,6 +38,11 @@ export async function updatePlantType(id: number, data: PlantTypePayload): Promi
 
 export async function getVarieties(plantTypeId: number): Promise<PlantVariety[]> {
   const res = await api.get<PlantVariety[]>(`/api/v1/plant-types/${plantTypeId}/varieties`)
+  return res.data
+}
+
+export async function getAllVarieties(): Promise<PlantVariety[]> {
+  const res = await api.get<PlantVariety[]>('/api/v1/plant-varieties')
   return res.data
 }
 

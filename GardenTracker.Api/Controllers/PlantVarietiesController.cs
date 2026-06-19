@@ -9,6 +9,14 @@ namespace GardenTracker.Api.Controllers;
 [Route("api/v1/plant-varieties")]
 public class PlantVarietiesController(IPlantVarietyService plantVarietyService, IPlantTypeService plantTypeService) : ApiControllerBase
 {
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<PlantVarietyResponse>>> GetAll()
+    {
+        var types = (await plantTypeService.GetAllAsync()).ToDictionary(t => t.Id);
+        var varieties = await plantVarietyService.GetAllAsync();
+        return Ok(varieties.Select(v => ToResponse(v, types.TryGetValue(v.PlantTypeId, out var t) ? t.Name : string.Empty)));
+    }
+
     [HttpGet("{id:int}")]
     public async Task<ActionResult<PlantVarietyResponse>> GetById(int id)
     {

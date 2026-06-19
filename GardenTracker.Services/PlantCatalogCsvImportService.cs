@@ -53,6 +53,7 @@ public class PlantCatalogCsvImportService(
 
                 var growthHabit = ParseEnum<GrowthHabit>(row.GrowthHabit);
                 var sunPreference = ParseEnum<SunPreference>(row.SunPreference);
+                var category = ParseEnum<PlantCategory>(row.Category) ?? PlantCategory.Other;
 
                 // Find or create the plant type
                 if (!typeCache.TryGetValue(row.PlantTypeName, out var plantType))
@@ -63,6 +64,7 @@ public class PlantCatalogCsvImportService(
                         plantType = new PlantType
                         {
                             Name = row.PlantTypeName,
+                            Category = category,
                             GrowthHabit = growthHabit,
                             DaysToMaturity = row.DaysToMaturity,
                             SpacingInches = row.SpacingInches,
@@ -75,6 +77,7 @@ public class PlantCatalogCsvImportService(
                     else if (string.IsNullOrWhiteSpace(row.PlantVarietyName))
                     {
                         // Row is a type-only row — update the type's attributes
+                        if (!string.IsNullOrWhiteSpace(row.Category)) plantType.Category = category;
                         plantType.GrowthHabit = growthHabit ?? plantType.GrowthHabit;
                         plantType.DaysToMaturity = row.DaysToMaturity ?? plantType.DaysToMaturity;
                         plantType.SpacingInches = row.SpacingInches ?? plantType.SpacingInches;

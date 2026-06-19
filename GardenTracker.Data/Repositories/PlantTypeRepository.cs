@@ -31,9 +31,9 @@ public class PlantTypeRepository(IConnectionFactory connectionFactory) : IPlantT
         using var conn = connectionFactory.CreateConnection();
         return await conn.ExecuteScalarAsync<int>(
             """
-            INSERT INTO PlantTypes (Name, GrowthHabit, DaysToMaturity, SpacingInches, SunPreference, IsPerennial)
+            INSERT INTO PlantTypes (Name, Category, GrowthHabit, DaysToMaturity, SpacingInches, SunPreference, IsPerennial)
             OUTPUT INSERTED.Id
-            VALUES (@Name, @GrowthHabit, @DaysToMaturity, @SpacingInches, @SunPreference, @IsPerennial)
+            VALUES (@Name, @Category, @GrowthHabit, @DaysToMaturity, @SpacingInches, @SunPreference, @IsPerennial)
             """,
             plantType);
     }
@@ -44,7 +44,7 @@ public class PlantTypeRepository(IConnectionFactory connectionFactory) : IPlantT
         await conn.ExecuteAsync(
             """
             UPDATE PlantTypes
-            SET Name = @Name, GrowthHabit = @GrowthHabit, DaysToMaturity = @DaysToMaturity,
+            SET Name = @Name, Category = @Category, GrowthHabit = @GrowthHabit, DaysToMaturity = @DaysToMaturity,
                 SpacingInches = @SpacingInches, SunPreference = @SunPreference, IsPerennial = @IsPerennial
             WHERE Id = @Id
             """,

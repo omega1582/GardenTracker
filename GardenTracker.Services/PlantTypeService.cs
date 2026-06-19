@@ -11,11 +11,12 @@ public class PlantTypeService(IPlantTypeRepository plantTypeRepository) : IPlant
 
     public Task<PlantType?> GetByIdAsync(int id) => plantTypeRepository.GetByIdAsync(id);
 
-    public async Task<PlantType> CreateAsync(string name, GrowthHabit? growthHabit, int? daysToMaturity, int? spacingInches, SunPreference? sunPreference, bool? isPerennial)
+    public async Task<PlantType> CreateAsync(string name, PlantCategory category, GrowthHabit? growthHabit, int? daysToMaturity, int? spacingInches, SunPreference? sunPreference, bool? isPerennial)
     {
         var plantType = new PlantType
         {
             Name = name,
+            Category = category,
             GrowthHabit = growthHabit,
             DaysToMaturity = daysToMaturity,
             SpacingInches = spacingInches,
@@ -26,11 +27,12 @@ public class PlantTypeService(IPlantTypeRepository plantTypeRepository) : IPlant
         return plantType;
     }
 
-    public async Task<bool> UpdateAsync(int id, string name, GrowthHabit? growthHabit, int? daysToMaturity, int? spacingInches, SunPreference? sunPreference, bool? isPerennial)
+    public async Task<bool> UpdateAsync(int id, string name, PlantCategory category, GrowthHabit? growthHabit, int? daysToMaturity, int? spacingInches, SunPreference? sunPreference, bool? isPerennial)
     {
         var plantType = await plantTypeRepository.GetByIdAsync(id);
         if (plantType == null) return false;
         plantType.Name = name;
+        plantType.Category = category;
         plantType.GrowthHabit = growthHabit;
         plantType.DaysToMaturity = daysToMaturity;
         plantType.SpacingInches = spacingInches;

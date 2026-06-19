@@ -3,6 +3,7 @@ namespace GardenTracker.Services;
 public class PlantCatalogCsvRow
 {
     public string PlantTypeName { get; set; } = string.Empty;
+    public string? Category { get; set; }
     public string? PlantVarietyName { get; set; }
     public string? GrowthHabit { get; set; }
     public int? DaysToMaturity { get; set; }

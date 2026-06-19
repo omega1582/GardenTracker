@@ -5,6 +5,7 @@ namespace GardenTracker.Core.Interfaces.Services;
 
 public interface IPlantVarietyService
 {
+    Task<IEnumerable<PlantVariety>> GetAllAsync();
     Task<IEnumerable<PlantVariety>> GetByPlantTypeAsync(int plantTypeId);
     Task<PlantVariety?> GetByIdAsync(int id);
     Task<PlantVariety> CreateAsync(int plantTypeId, string name, string? notes, GrowthHabit? growthHabit, int? daysToMaturity, int? spacingInches, SunPreference? sunPreference, bool? isPerennial);

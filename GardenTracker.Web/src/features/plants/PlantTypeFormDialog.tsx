@@ -25,6 +25,7 @@ interface Props {
 export default function PlantTypeFormDialog({ open, onClose, editing }: Props) {
   const qc = useQueryClient()
   const [name, setName] = useState('')
+  const [category, setCategory] = useState('Other')
   const [growthHabit, setGrowthHabit] = useState('')
   const [daysToMaturity, setDaysToMaturity] = useState('')
   const [spacingInches, setSpacingInches] = useState('')
@@ -34,6 +35,7 @@ export default function PlantTypeFormDialog({ open, onClose, editing }: Props) {
   useEffect(() => {
     if (open) {
       setName(editing?.name ?? '')
+      setCategory(editing?.category ?? 'Other')
       setGrowthHabit(editing?.growthHabit ?? '')
       setDaysToMaturity(editing?.daysToMaturity?.toString() ?? '')
       setSpacingInches(editing?.spacingInches?.toString() ?? '')
@@ -46,6 +48,7 @@ export default function PlantTypeFormDialog({ open, onClose, editing }: Props) {
     mutationFn: () => {
       const payload = {
         name,
+        category,
         growthHabit: (growthHabit || null) as GrowthHabit | null,
         daysToMaturity: daysToMaturity ? parseInt(daysToMaturity) : null,
         spacingInches: spacingInches ? parseInt(spacingInches) : null,
@@ -82,6 +85,18 @@ export default function PlantTypeFormDialog({ open, onClose, editing }: Props) {
               maxLength={100}
               placeholder="e.g. Tomato"
             />
+          </div>
+
+          <div className="space-y-1">
+            <Label htmlFor="pt-category">Category</Label>
+            <select id="pt-category" className={selectClass} value={category} onChange={(e) => setCategory(e.target.value)} required>
+              <option value="Vegetables">Vegetables</option>
+              <option value="Fruits">Fruits</option>
+              <option value="Herbs">Herbs</option>
+              <option value="Flowers">Flowers</option>
+              <option value="Ornamentals">Ornamentals</option>
+              <option value="Other">Other</option>
+            </select>
           </div>
 
           <div className="space-y-1">

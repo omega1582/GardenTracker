@@ -7,6 +7,18 @@ namespace GardenTracker.Services;
 
 public class PlantVarietyService(IPlantVarietyRepository varietyRepository, IPlantTypeRepository plantTypeRepository) : IPlantVarietyService
 {
+    public async Task<IEnumerable<PlantVariety>> GetAllAsync()
+    {
+        var plantTypes = (await plantTypeRepository.GetAllAsync()).ToDictionary(t => t.Id);
+        var varieties = await varietyRepository.GetAllAsync();
+        foreach (var v in varieties)
+        {
+            if (plantTypes.TryGetValue(v.PlantTypeId, out var pt))
+                ApplyFallbacks(v, pt);
+        }
+        return varieties;
+    }
+
     public async Task<IEnumerable<PlantVariety>> GetByPlantTypeAsync(int plantTypeId)
     {
         var plantType = await plantTypeRepository.GetByIdAsync(plantTypeId);

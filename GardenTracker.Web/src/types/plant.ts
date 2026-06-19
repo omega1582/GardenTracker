@@ -4,6 +4,7 @@ export type SunPreference = 'FullSun' | 'PartialSun' | 'Shade'
 export interface PlantType {
   id: number
   name: string
+  category: string
   growthHabit?: GrowthHabit | null
   daysToMaturity?: number | null
   spacingInches?: number | null
