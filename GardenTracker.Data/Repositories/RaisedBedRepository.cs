@@ -41,7 +41,8 @@ public class BedRepository(IConnectionFactory connectionFactory) : IBedRepositor
             """
             UPDATE Beds
             SET Name = @Name, LengthFt = @LengthFt, WidthFt = @WidthFt, DepthIn = @DepthIn,
-                Material = @Material, ExpectedLifespanYears = @ExpectedLifespanYears, Notes = @Notes
+                Material = @Material, ExpectedLifespanYears = @ExpectedLifespanYears,
+                InstalledDate = @InstalledDate, Notes = @Notes
             WHERE Id = @Id
             """,
             bed);

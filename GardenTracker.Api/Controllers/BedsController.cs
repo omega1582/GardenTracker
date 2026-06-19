@@ -40,7 +40,7 @@ public class BedsController(IBedService bedService) : ApiControllerBase
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int gardenId, int id, UpdateBedRequest request)
     {
-        var updated = await bedService.UpdateAsync(id, CurrentUserId, request.Name, request.Material, request.ExpectedLifespanYears, request.Notes);
+        var updated = await bedService.UpdateAsync(id, CurrentUserId, request.Name, request.LengthFt, request.WidthFt, request.DepthIn, request.Material, request.ExpectedLifespanYears, request.InstalledDate, request.Notes);
         return updated ? NoContent() : NotFound();
     }
 

@@ -26,7 +26,11 @@ export interface CreateBedRequest {
 
 export interface UpdateBedRequest {
   name: string
+  lengthFt: number
+  widthFt: number
+  depthIn: number
   material?: string
   expectedLifespanYears?: number
+  installedDate: string
   notes?: string
 }
