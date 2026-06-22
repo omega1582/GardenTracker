@@ -8,13 +8,10 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
-import { Leaf, Search, Plus, Edit2, ChevronDown, ChevronRight } from 'lucide-react'
-import { Input } from '@/components/ui/input'
-import { cn } from '@/lib/utils'
+import { Leaf, Plus, Edit2 } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
 
 const SUN_LABELS: Record<SunPreference, string> = { FullSun: 'Full Sun', PartialSun: 'Partial Sun', Shade: 'Shade' }
-
-const CATEGORIES = ['Vegetables', 'Fruits', 'Herbs', 'Flowers', 'Ornamentals', 'Other']
 
 export default function PlantsPage() {
   const queryClient = useQueryClient()
@@ -24,15 +21,15 @@ export default function PlantsPage() {
   const [editingVariety, setEditingVariety] = useState<PlantVariety | undefined>()
   
   // Navigation State
-  const [selectedCategory, setSelectedCategory] = useState<string>('All')
-  const [selectedTypeId, setSelectedTypeId] = useState<number | null>(null)
-  const [expandedCategories, setExpandedCategories] = useState<string[]>(['Vegetables', 'Fruits', 'Herbs'])
-  
-  const [searchQuery, setSearchQuery] = useState('')
+  // Navigation State from URL
+  const [searchParams] = useSearchParams()
+  const selectedCategory = searchParams.get('category') || 'All'
+  const selectedTypeId = Number(searchParams.get('typeId')) || null
+
   const [importStatus, setImportStatus] = useState<{ created: number; updated: number; errors: string[] } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const { data: plantTypes = [], isLoading: isLoadingTypes } = useQuery({
+  const { data: plantTypes = [] } = useQuery({
     queryKey: ['plant-types'],
     queryFn: getPlantTypes,
   })
@@ -62,39 +59,6 @@ export default function PlantsPage() {
     if (file) importMutation.mutate(file)
   }
 
-  const toggleCategory = (cat: string) => {
-    setExpandedCategories(prev => 
-      prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
-    )
-  }
-
-  const handleSelectCategory = (cat: string) => {
-    setSelectedCategory(cat)
-    setSelectedTypeId(null)
-    if (cat !== 'All' && !expandedCategories.includes(cat)) {
-      setExpandedCategories(prev => [...prev, cat])
-    }
-  }
-
-  const handleSelectType = (cat: string, typeId: number) => {
-    setSelectedCategory(cat)
-    setSelectedTypeId(typeId)
-  }
-
-  // Filter types by search
-  const filteredTypes = plantTypes.filter(t => t.name.toLowerCase().includes(searchQuery.toLowerCase()))
-
-  // Group types by category
-  const typesByCategory = useMemo(() => {
-    const groups: Record<string, PlantType[]> = {}
-    CATEGORIES.forEach(c => groups[c] = [])
-    filteredTypes.forEach(t => {
-      if (groups[t.category]) groups[t.category].push(t)
-      else groups['Other'].push(t)
-    })
-    return groups
-  }, [filteredTypes])
-
   // Determine what to show in the main grid
   const selectedTypeObj = selectedTypeId ? plantTypes.find(t => t.id === selectedTypeId) : null
   
@@ -112,7 +76,7 @@ export default function PlantsPage() {
   const headerTitle = selectedTypeId ? selectedTypeObj?.name : (selectedCategory === 'All' ? 'All Plants' : selectedCategory)
 
   return (
-    <div className="flex flex-col h-[calc(100vh-6rem)]">
+    <div className="flex flex-col h-full p-6">
       {/* Header */}
       <div className="flex items-center justify-between pb-4 border-b">
         <div>
@@ -143,97 +107,7 @@ export default function PlantsPage() {
         </div>
       )}
 
-      <div className="flex flex-1 overflow-hidden mt-6 gap-6">
-        {/* Left Sidebar - Hierarchical Menu */}
-        <div className="w-64 shrink-0 flex flex-col border rounded-xl bg-card overflow-hidden">
-          <div className="p-4 border-b bg-muted/30">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search types..."
-                className="pl-9 h-9 bg-background"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-          </div>
-          <ScrollArea className="flex-1">
-            <div className="p-2 space-y-1 pb-4">
-              {isLoadingTypes ? (
-                <p className="p-4 text-sm text-muted-foreground text-center">Loading types...</p>
-              ) : (
-                <>
-                  <button
-                    onClick={() => handleSelectCategory('All')}
-                    className={cn(
-                      "w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg transition-colors text-left",
-                      selectedCategory === 'All' && !selectedTypeId
-                        ? "bg-primary/10 text-primary"
-                        : "hover:bg-muted text-foreground"
-                    )}
-                  >
-                    All Plants
-                  </button>
-
-                  {CATEGORIES.map(category => {
-                    const types = typesByCategory[category]
-                    if (types.length === 0 && !searchQuery) return null // Hide empty categories unless searching
-                    
-                    const isExpanded = expandedCategories.includes(category) || searchQuery.length > 0
-                    const isCategorySelected = selectedCategory === category && !selectedTypeId
-                    
-                    return (
-                      <div key={category} className="pt-1">
-                        <div className="flex items-center">
-                          <button
-                            onClick={() => toggleCategory(category)}
-                            className="p-1.5 hover:bg-muted rounded-md text-muted-foreground"
-                          >
-                            {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                          </button>
-                          <button
-                            onClick={() => handleSelectCategory(category)}
-                            className={cn(
-                              "flex-1 flex items-center px-2 py-2 text-sm font-medium rounded-lg transition-colors text-left",
-                              isCategorySelected
-                                ? "bg-primary/10 text-primary"
-                                : "hover:bg-muted text-foreground"
-                            )}
-                          >
-                            {category}
-                          </button>
-                        </div>
-                        
-                        {isExpanded && (
-                          <div className="pl-6 pr-2 py-1 space-y-0.5">
-                            {types.map(type => (
-                              <button
-                                key={type.id}
-                                onClick={() => handleSelectType(category, type.id)}
-                                className={cn(
-                                  "w-full flex items-center justify-between px-3 py-1.5 text-sm rounded-lg transition-colors text-left",
-                                  selectedTypeId === type.id
-                                    ? "bg-primary text-primary-foreground font-medium shadow-sm"
-                                    : "hover:bg-muted text-muted-foreground hover:text-foreground"
-                                )}
-                              >
-                                <span className="truncate">{type.name}</span>
-                              </button>
-                            ))}
-                            {types.length === 0 && (
-                              <p className="px-3 py-1 text-xs text-muted-foreground">No matches</p>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    )
-                  })}
-                </>
-              )}
-            </div>
-          </ScrollArea>
-        </div>
+      <div className="flex flex-1 overflow-hidden mt-6">
 
         {/* Main Content Area - Varieties Grid */}
         <div className="flex-1 flex flex-col overflow-hidden">
