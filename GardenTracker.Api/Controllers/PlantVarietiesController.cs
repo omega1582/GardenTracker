@@ -29,8 +29,35 @@ public class PlantVarietiesController(IPlantVarietyService plantVarietyService, 
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, CreatePlantVarietyRequest request)
     {
-        var updated = await plantVarietyService.UpdateAsync(id, request.Name, request.Notes, request.GrowthHabit, request.DaysToMaturity, request.SpacingInches, request.SunPreference, request.IsPerennial);
+        var updated = await plantVarietyService.UpdateAsync(id, request.Name, request.Notes, request.GrowthHabit, request.DaysToMaturity, request.SpacingInches, request.SunPreference, request.IsPerennial, request.ImageUrl);
         return updated ? NoContent() : NotFound();
+    }
+
+    [HttpPost("upload-image")]
+    public async Task<ActionResult<object>> UploadImage(IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest(new { error = "No file provided." });
+
+        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+        var ext = Path.GetExtension(file.FileName).ToLower();
+        if (!allowedExtensions.Contains(ext))
+            return BadRequest(new { error = "Invalid image format. Allowed formats are JPG, JPEG, PNG, GIF, WEBP." });
+
+        var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+        if (!Directory.Exists(uploadsFolder))
+            Directory.CreateDirectory(uploadsFolder);
+
+        var uniqueFileName = $"{Guid.NewGuid()}{ext}";
+        var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+        using (var stream = new FileStream(filePath, FileMode.Create))
+        {
+            await file.CopyToAsync(stream);
+        }
+
+        var relativeUrl = $"/uploads/{uniqueFileName}";
+        return Ok(new { Url = relativeUrl });
     }
 
     private static PlantVarietyResponse ToResponse(PlantVariety v, string plantTypeName) => new()
@@ -44,6 +71,7 @@ public class PlantVarietiesController(IPlantVarietyService plantVarietyService, 
         DaysToMaturity = v.DaysToMaturity,
         SpacingInches = v.SpacingInches,
         SunPreference = v.SunPreference?.ToString(),
-        IsPerennial = v.IsPerennial
+        IsPerennial = v.IsPerennial,
+        ImageUrl = v.ImageUrl
     };
 }

@@ -13,6 +13,7 @@ public class PlantVarietyConfiguration : IEntityTypeConfiguration<PlantVariety>
         builder.HasIndex(v => new { v.PlantTypeId, v.Name }).IsUnique();
         builder.Property(v => v.GrowthHabit).HasConversion<string>();
         builder.Property(v => v.SunPreference).HasConversion<string>();
+        builder.Property(v => v.ImageUrl).HasMaxLength(500);
 
         builder.HasOne(v => v.PlantType)
             .WithMany(p => p.Varieties)

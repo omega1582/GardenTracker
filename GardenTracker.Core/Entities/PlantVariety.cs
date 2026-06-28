@@ -13,6 +13,7 @@ public class PlantVariety
     public int? SpacingInches { get; set; }
     public SunPreference? SunPreference { get; set; }
     public bool? IsPerennial { get; set; }
+    public string? ImageUrl { get; set; }
 
     public PlantType PlantType { get; set; } = null!;
     public ICollection<BedPlanting> Plantings { get; set; } = [];

@@ -10,6 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { Leaf, Plus, Edit2 } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
+import { getEnv } from '@/lib/env'
 
 const SUN_LABELS: Record<SunPreference, string> = { FullSun: 'Full Sun', PartialSun: 'Partial Sun', Shade: 'Shade' }
 
@@ -165,8 +166,16 @@ export default function PlantsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-4">
                 {displayedVarieties.map(variety => (
                   <Card key={variety.id} className="overflow-hidden group flex flex-col">
-                    <div className="aspect-[4/3] w-full bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/40 flex items-center justify-center relative">
-                      <Leaf className="w-12 h-12 text-emerald-600/20 dark:text-emerald-400/20" />
+                    <div className="aspect-[4/3] w-full bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/40 flex items-center justify-center relative overflow-hidden">
+                      {variety.imageUrl ? (
+                        <img
+                          src={variety.imageUrl.startsWith('http') ? variety.imageUrl : `${getEnv('VITE_API_URL') ?? 'http://localhost:5280'}${variety.imageUrl}`}
+                          alt={variety.name}
+                          className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-300"
+                        />
+                      ) : (
+                        <Leaf className="w-12 h-12 text-emerald-600/20 dark:text-emerald-400/20" />
+                      )}
                       <Button
                         variant="secondary"
                         size="icon"

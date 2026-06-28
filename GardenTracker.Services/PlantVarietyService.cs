@@ -39,7 +39,7 @@ public class PlantVarietyService(IPlantVarietyRepository varietyRepository, IPla
         return variety;
     }
 
-    public async Task<PlantVariety> CreateAsync(int plantTypeId, string name, string? notes, GrowthHabit? growthHabit, int? daysToMaturity, int? spacingInches, SunPreference? sunPreference, bool? isPerennial)
+    public async Task<PlantVariety> CreateAsync(int plantTypeId, string name, string? notes, GrowthHabit? growthHabit, int? daysToMaturity, int? spacingInches, SunPreference? sunPreference, bool? isPerennial, string? imageUrl)
     {
         var variety = new PlantVariety
         {
@@ -50,13 +50,14 @@ public class PlantVarietyService(IPlantVarietyRepository varietyRepository, IPla
             DaysToMaturity = daysToMaturity,
             SpacingInches = spacingInches,
             SunPreference = sunPreference,
-            IsPerennial = isPerennial
+            IsPerennial = isPerennial,
+            ImageUrl = imageUrl
         };
         variety.Id = await varietyRepository.CreateAsync(variety);
         return variety;
     }
 
-    public async Task<bool> UpdateAsync(int id, string name, string? notes, GrowthHabit? growthHabit, int? daysToMaturity, int? spacingInches, SunPreference? sunPreference, bool? isPerennial)
+    public async Task<bool> UpdateAsync(int id, string name, string? notes, GrowthHabit? growthHabit, int? daysToMaturity, int? spacingInches, SunPreference? sunPreference, bool? isPerennial, string? imageUrl)
     {
         var variety = await varietyRepository.GetByIdAsync(id);
         if (variety == null) return false;
@@ -67,6 +68,7 @@ public class PlantVarietyService(IPlantVarietyRepository varietyRepository, IPla
         variety.SpacingInches = spacingInches;
         variety.SunPreference = sunPreference;
         variety.IsPerennial = isPerennial;
+        variety.ImageUrl = imageUrl;
         await varietyRepository.UpdateAsync(variety);
         return true;
     }

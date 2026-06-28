@@ -12,4 +12,5 @@ public class PlantVarietyResponse
     public int? SpacingInches { get; set; }
     public string? SunPreference { get; set; }
     public bool? IsPerennial { get; set; }
+    public string? ImageUrl { get; set; }
 }

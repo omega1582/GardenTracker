@@ -23,4 +23,5 @@ export interface PlantVariety {
   spacingInches?: number | null
   sunPreference?: SunPreference | null
   isPerennial?: boolean | null
+  imageUrl?: string | null
 }

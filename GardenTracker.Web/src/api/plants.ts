@@ -20,6 +20,7 @@ export interface PlantVarietyPayload {
   spacingInches?: number | null
   sunPreference?: SunPreference | null
   isPerennial?: boolean | null
+  imageUrl?: string | null
 }
 
 export async function getPlantTypes(): Promise<PlantType[]> {
@@ -59,6 +60,15 @@ export async function importPlantCatalogCsv(file: File): Promise<CsvImportResult
   const form = new FormData()
   form.append('file', file)
   const res = await api.post<CsvImportResult>('/api/v1/plant-types/import', form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+  return res.data
+}
+
+export async function uploadVarietyImage(file: File): Promise<{ url: string }> {
+  const form = new FormData()
+  form.append('file', file)
+  const res = await api.post<{ url: string }>('/api/v1/plant-varieties/upload-image', form, {
     headers: { 'Content-Type': 'multipart/form-data' },
   })
   return res.data
