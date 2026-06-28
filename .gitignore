@@ -32,3 +32,8 @@ GardenTracker.Web/.env.local
 
 # Claude Code local settings (personal overrides)
 .claude/settings.local.json
+
+# Local agent customization rules
+AGENTS.md
+.agents/
+
