@@ -36,7 +36,7 @@ public class PlantVarietyServiceTests
     {
         _repo.Setup(r => r.CreateAsync(It.IsAny<PlantVariety>())).ReturnsAsync(5);
 
-        var result = await _sut.CreateAsync(1, "Brandywine", "Heirloom", GrowthHabit.Upright, 80, 24, SunPreference.FullSun, false);
+        var result = await _sut.CreateAsync(1, "Brandywine", "Heirloom", GrowthHabit.Upright, 80, 24, SunPreference.FullSun, false, "http://example.com/brandywine.jpg");
 
         result.PlantTypeId.Should().Be(1);
         result.Name.Should().Be("Brandywine");
@@ -47,6 +47,7 @@ public class PlantVarietyServiceTests
         result.SpacingInches.Should().Be(24);
         result.SunPreference.Should().Be(SunPreference.FullSun);
         result.IsPerennial.Should().BeFalse();
+        result.ImageUrl.Should().Be("http://example.com/brandywine.jpg");
     }
 
     [Fact]
@@ -54,7 +55,7 @@ public class PlantVarietyServiceTests
     {
         _repo.Setup(r => r.GetByIdAsync(99)).ReturnsAsync((PlantVariety?)null);
 
-        var result = await _sut.UpdateAsync(99, "New Name", null, null, null, null, null, null);
+        var result = await _sut.UpdateAsync(99, "New Name", null, null, null, null, null, null, null);
 
         result.Should().BeFalse();
     }
@@ -62,10 +63,10 @@ public class PlantVarietyServiceTests
     [Fact]
     public async Task UpdateAsync_UpdatesAllFields()
     {
-        var variety = new PlantVariety { Id = 1, PlantTypeId = 1, Name = "Old", Notes = "Old notes" };
+        var variety = new PlantVariety { Id = 1, PlantTypeId = 1, Name = "Old", Notes = "Old notes", ImageUrl = "Old image" };
         _repo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(variety);
 
-        var result = await _sut.UpdateAsync(1, "New Name", "New notes", GrowthHabit.Vining, 90, 36, SunPreference.FullSun, false);
+        var result = await _sut.UpdateAsync(1, "New Name", "New notes", GrowthHabit.Vining, 90, 36, SunPreference.FullSun, false, "http://example.com/new.jpg");
 
         result.Should().BeTrue();
         _repo.Verify(r => r.UpdateAsync(It.Is<PlantVariety>(v =>
@@ -75,7 +76,8 @@ public class PlantVarietyServiceTests
             v.DaysToMaturity == 90 &&
             v.SpacingInches == 36 &&
             v.SunPreference == SunPreference.FullSun &&
-            v.IsPerennial == false)), Times.Once);
+            v.IsPerennial == false &&
+            v.ImageUrl == "http://example.com/new.jpg")), Times.Once);
     }
 
     [Fact]

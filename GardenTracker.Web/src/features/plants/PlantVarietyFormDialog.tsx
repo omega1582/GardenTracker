@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { createVariety, updateVariety } from '@/api/plants'
+import { createVariety, updateVariety, uploadVarietyImage } from '@/api/plants'
 import type { PlantVariety, GrowthHabit, SunPreference } from '@/types/plant'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { getEnv } from '@/lib/env'
 import {
   Dialog,
   DialogContent,
@@ -40,6 +41,9 @@ export default function PlantVarietyFormDialog({
   const [spacingInches, setSpacingInches] = useState('')
   const [sunPreference, setSunPreference] = useState('')
   const [isPerennial, setIsPerennial] = useState('')
+  const [imageUrl, setImageUrl] = useState('')
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadError, setUploadError] = useState('')
 
   useEffect(() => {
     if (open) {
@@ -50,8 +54,25 @@ export default function PlantVarietyFormDialog({
       setSpacingInches(editing?.spacingInches?.toString() ?? '')
       setSunPreference(editing?.sunPreference ?? '')
       setIsPerennial(editing?.isPerennial == null ? '' : editing.isPerennial ? 'true' : 'false')
+      setImageUrl(editing?.imageUrl ?? '')
+      setUploadError('')
     }
   }, [open, editing])
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setIsUploading(true)
+    setUploadError('')
+    try {
+      const res = await uploadVarietyImage(file)
+      setImageUrl(res.url)
+    } catch (err: any) {
+      setUploadError(err.response?.data?.error ?? 'Upload failed.')
+    } finally {
+      setIsUploading(false)
+    }
+  }
 
   const mutation = useMutation<void | PlantVariety>({
     mutationFn: () => {
@@ -63,6 +84,7 @@ export default function PlantVarietyFormDialog({
         spacingInches: spacingInches ? parseInt(spacingInches) : null,
         sunPreference: (sunPreference || null) as SunPreference | null,
         isPerennial: isPerennial === '' ? null : isPerennial === 'true',
+        imageUrl: imageUrl || null,
       }
       return editing ? updateVariety(editing.id, payload) : createVariety(plantTypeId, payload)
     },
@@ -106,6 +128,55 @@ export default function PlantVarietyFormDialog({
               rows={2}
               placeholder="Growing tips, etc."
             />
+          </div>
+
+          <div className="space-y-1">
+            <Label htmlFor="v-image-url">Variety Image <span className="text-muted-foreground">(optional)</span></Label>
+            <div className="flex gap-2">
+              <Input
+                id="v-image-url"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                placeholder="Paste image URL..."
+              />
+              <div className="relative">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="px-3"
+                  onClick={() => document.getElementById('v-image-file')?.click()}
+                  disabled={isUploading}
+                >
+                  {isUploading ? '...' : 'Upload'}
+                </Button>
+                <input
+                  id="v-image-file"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleUpload}
+                />
+              </div>
+            </div>
+            {uploadError && <p className="text-xs text-destructive">{uploadError}</p>}
+            {imageUrl && (
+              <div className="mt-2 relative aspect-[4/3] w-full rounded-lg overflow-hidden border bg-muted flex items-center justify-center">
+                <img
+                  src={imageUrl.startsWith('http') ? imageUrl : `${getEnv('VITE_API_URL') ?? 'http://localhost:5280'}${imageUrl}`}
+                  alt="Variety preview"
+                  className="w-full h-full object-cover"
+                />
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="icon"
+                  className="absolute top-1 right-1 h-6 w-6 rounded-full"
+                  onClick={() => setImageUrl('')}
+                >
+                  &times;
+                </Button>
+              </div>
+            )}
           </div>
 
           <div className="space-y-1">

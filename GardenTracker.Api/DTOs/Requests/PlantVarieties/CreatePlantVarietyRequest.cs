@@ -13,4 +13,6 @@ public class CreatePlantVarietyRequest
     public int? SpacingInches { get; set; }
     public SunPreference? SunPreference { get; set; }
     public bool? IsPerennial { get; set; }
+    [MaxLength(500)]
+    public string? ImageUrl { get; set; }
 }

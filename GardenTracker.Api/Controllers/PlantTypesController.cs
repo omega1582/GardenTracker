@@ -53,7 +53,7 @@ public class PlantTypesController(IPlantTypeService plantTypeService, IPlantVari
     {
         var type = await plantTypeService.GetByIdAsync(id);
         if (type == null) return NotFound();
-        var variety = await plantVarietyService.CreateAsync(id, request.Name, request.Notes, request.GrowthHabit, request.DaysToMaturity, request.SpacingInches, request.SunPreference, request.IsPerennial);
+        var variety = await plantVarietyService.CreateAsync(id, request.Name, request.Notes, request.GrowthHabit, request.DaysToMaturity, request.SpacingInches, request.SunPreference, request.IsPerennial, request.ImageUrl);
         return CreatedAtAction(nameof(GetVarieties), new { id }, ToVarietyResponse(variety, type.Name));
     }
 
@@ -91,6 +91,7 @@ public class PlantTypesController(IPlantTypeService plantTypeService, IPlantVari
         DaysToMaturity = v.DaysToMaturity,
         SpacingInches = v.SpacingInches,
         SunPreference = v.SunPreference?.ToString(),
-        IsPerennial = v.IsPerennial
+        IsPerennial = v.IsPerennial,
+        ImageUrl = v.ImageUrl
     };
 }

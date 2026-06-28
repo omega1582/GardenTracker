@@ -40,9 +40,9 @@ public class PlantVarietyRepository(IConnectionFactory connectionFactory) : IPla
         using var conn = connectionFactory.CreateConnection();
         return await conn.ExecuteScalarAsync<int>(
             """
-            INSERT INTO PlantVarieties (PlantTypeId, Name, Notes, GrowthHabit, DaysToMaturity, SpacingInches, SunPreference, IsPerennial)
+            INSERT INTO PlantVarieties (PlantTypeId, Name, Notes, GrowthHabit, DaysToMaturity, SpacingInches, SunPreference, IsPerennial, ImageUrl)
             OUTPUT INSERTED.Id
-            VALUES (@PlantTypeId, @Name, @Notes, @GrowthHabit, @DaysToMaturity, @SpacingInches, @SunPreference, @IsPerennial)
+            VALUES (@PlantTypeId, @Name, @Notes, @GrowthHabit, @DaysToMaturity, @SpacingInches, @SunPreference, @IsPerennial, @ImageUrl)
             """,
             variety);
     }
@@ -54,7 +54,7 @@ public class PlantVarietyRepository(IConnectionFactory connectionFactory) : IPla
             """
             UPDATE PlantVarieties
             SET Name = @Name, Notes = @Notes, GrowthHabit = @GrowthHabit, DaysToMaturity = @DaysToMaturity,
-                SpacingInches = @SpacingInches, SunPreference = @SunPreference, IsPerennial = @IsPerennial
+                SpacingInches = @SpacingInches, SunPreference = @SunPreference, IsPerennial = @IsPerennial, ImageUrl = @ImageUrl
             WHERE Id = @Id
             """,
             variety);
