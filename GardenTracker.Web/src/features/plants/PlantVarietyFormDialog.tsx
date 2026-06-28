@@ -67,7 +67,7 @@ export default function PlantVarietyFormDialog({
       return editing ? updateVariety(editing.id, payload) : createVariety(plantTypeId, payload)
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['varieties', plantTypeId] })
+      qc.invalidateQueries({ queryKey: ['varieties'] })
       onClose()
     },
   })

@@ -207,15 +207,13 @@ export default function PlantsPage() {
         onClose={() => setTypeFormOpen(false)}
         editing={editingType}
       />
-      {selectedTypeObj && (
-        <PlantVarietyFormDialog
-          open={varietyFormOpen}
-          onClose={() => setVarietyFormOpen(false)}
-          plantTypeId={selectedTypeObj.id}
-          plantTypeName={selectedTypeObj.name}
-          editing={editingVariety}
-        />
-      )}
+      <PlantVarietyFormDialog
+        open={varietyFormOpen}
+        onClose={() => setVarietyFormOpen(false)}
+        plantTypeId={editingVariety?.plantTypeId ?? selectedTypeObj?.id ?? 0}
+        plantTypeName={editingVariety?.plantTypeName ?? selectedTypeObj?.name ?? ''}
+        editing={editingVariety}
+      />
     </div>
   )
 }
