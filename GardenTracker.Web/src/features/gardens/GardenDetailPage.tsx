@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
+import { ChevronRight, MapPin } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getGarden, deleteGarden } from '@/api/gardens'
 import { getBeds, deleteBed } from '@/api/beds'
@@ -217,23 +218,26 @@ export default function GardenDetailPage() {
   ).sort((a, b) => b - a)
 
   return (
-    <div className="space-y-8">
+    <div className="flex flex-col h-full overflow-y-auto p-6 lg:p-8 space-y-8">
       {/* Breadcrumb */}
-      <nav className="text-sm text-muted-foreground">
-        <Link to="/gardens" className="hover:text-foreground">Gardens</Link>
-        <span className="mx-2">/</span>
-        <span className="text-foreground">{garden.name}</span>
+      <nav className="flex items-center text-sm text-muted-foreground gap-1.5">
+        <Link to="/gardens" className="hover:text-foreground transition-colors">Gardens</Link>
+        <ChevronRight className="w-4 h-4" />
+        <span className="text-foreground font-medium">{garden.name}</span>
       </nav>
 
       {/* Garden header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{garden.name}</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{garden.name}</h1>
           {garden.location && (
-            <p className="mt-1 text-sm text-muted-foreground">{garden.location}</p>
+            <div className="flex items-center gap-1.5 mt-2 text-muted-foreground">
+              <MapPin className="w-4 h-4" />
+              <span>{garden.location}</span>
+            </div>
           )}
           {garden.notes && (
-            <p className="mt-2 text-sm">{garden.notes}</p>
+            <p className="mt-3 text-sm text-muted-foreground max-w-2xl">{garden.notes}</p>
           )}
         </div>
         <div className="flex gap-2">

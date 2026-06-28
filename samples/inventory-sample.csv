@@ -1,0 +1,12 @@
+PlantTypeName,PlantVarietyName,Type,QuantityPurchased,QuantityRemaining,TotalCost,PurchaseDate,SupplierName,SupplierType,Notes
+Tomato,Roma,Seed,50,32,3.99,2025-02-15,Baker Creek Heirloom Seeds,Online,
+Tomato,Cherokee Purple,Seed,25,18,4.49,2025-02-15,Baker Creek Heirloom Seeds,Online,Heirloom variety
+Tomato,Sun Gold,Plant,6,2,12.99,2025-04-20,Green Thumb Nursery,LocalNursery,Already started
+Pepper,Jalapeño,Seed,30,30,2.99,2025-02-15,Territorial Seed Company,Online,
+Pepper,Bell Red,Plant,4,4,9.99,2025-04-20,Green Thumb Nursery,LocalNursery,
+Lettuce,Butterhead,Seed,200,145,3.49,2025-03-01,Seed Savers Exchange,SeedExchange,Direct sow in beds
+Lettuce,Romaine,Seed,200,200,2.99,2025-03-01,Seed Savers Exchange,SeedExchange,
+Zucchini,Black Beauty,Seed,10,7,2.49,2025-03-01,Home Depot,BigBox,
+Basil,Genovese,Seed,100,88,1.99,2025-02-15,Burpee,Online,
+Kale,Lacinato,Seed,75,60,3.29,2025-02-15,Territorial Seed Company,Online,Also called Dinosaur kale
+Cucumber,Straight Eight,Seed,20,20,2.79,2025-03-01,Home Depot,BigBox,

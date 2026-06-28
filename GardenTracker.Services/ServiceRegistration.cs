@@ -23,6 +23,8 @@ public static class ServiceRegistration
         services.AddScoped<IInventoryService, InventoryService>();
         services.AddScoped<ICsvExportService, CsvExportService>();
         services.AddScoped<ICsvImportService, CsvImportService>();
+        services.AddScoped<IWaterBillCsvImportService, WaterBillCsvImportService>();
+        services.AddScoped<IPlantCatalogCsvImportService, PlantCatalogCsvImportService>();
 
         return services;
     }

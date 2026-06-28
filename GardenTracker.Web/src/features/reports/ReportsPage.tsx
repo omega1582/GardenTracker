@@ -1,11 +1,9 @@
-import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { getGardens } from '@/api/gardens'
 import { getSeasonSummary, getYearOverYear, getWaterAttribution, getBedBreakdown } from '@/api/reports'
 import { Card, CardContent } from '@/components/ui/card'
+import { useSearchParams } from 'react-router-dom'
 
 const CURRENT_YEAR = new Date().getFullYear()
-const YEAR_OPTIONS = Array.from({ length: 6 }, (_, i) => CURRENT_YEAR - i)
 
 const MONTH_NAMES = [
   'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
@@ -19,10 +17,12 @@ const UNIT_LABELS: Record<string, string> = {
 function fmt(n: number) { return `$${n.toFixed(2)}` }
 
 export default function ReportsPage() {
-  const [selectedGardenId, setSelectedGardenId] = useState<number | ''>('')
-  const [selectedYear, setSelectedYear] = useState(CURRENT_YEAR)
-
-  const { data: gardens = [] } = useQuery({ queryKey: ['gardens'], queryFn: getGardens })
+  const [searchParams] = useSearchParams()
+  const paramGardenId = searchParams.get('gardenId')
+  const paramYear = searchParams.get('year')
+  
+  const selectedGardenId = paramGardenId ? Number(paramGardenId) : ''
+  const selectedYear = paramYear ? Number(paramYear) : CURRENT_YEAR
 
   const enabled = !!selectedGardenId
 
@@ -54,26 +54,12 @@ export default function ReportsPage() {
   const hasHarvestValue = season && season.totalHarvestValue === 0 && season.harvestLines.length > 0
 
   return (
-    <div className="space-y-8">
+    <div className="flex flex-col h-full overflow-y-auto p-6 lg:p-8 space-y-8">
       {/* Header */}
-      <div className="flex items-start justify-between flex-wrap gap-4">
-        <h1 className="text-2xl font-semibold tracking-tight">Reports</h1>
-        <div className="flex items-center gap-3">
-          <select
-            className="rounded-md border border-input bg-background px-3 py-1.5 text-sm"
-            value={selectedGardenId}
-            onChange={(e) => setSelectedGardenId(e.target.value ? Number(e.target.value) : '')}
-          >
-            <option value="">Select garden…</option>
-            {gardens.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
-          </select>
-          <select
-            className="rounded-md border border-input bg-background px-3 py-1.5 text-sm"
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(Number(e.target.value))}
-          >
-            {YEAR_OPTIONS.map(y => <option key={y} value={y}>{y}</option>)}
-          </select>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Reports</h1>
+          <p className="mt-1 text-muted-foreground">Analyze your garden's performance and costs.</p>
         </div>
       </div>
 
@@ -110,7 +96,7 @@ export default function ReportsPage() {
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   {Object.keys(season.expensesByCategory).length > 0 && (
-                    <Card>
+                    <Card className="border-border shadow-sm">
                       <CardContent className="pt-4 space-y-2">
                         <p className="text-sm font-medium">Expenses by Category</p>
                         <div className="space-y-1">
@@ -128,7 +114,7 @@ export default function ReportsPage() {
                   )}
 
                   {season.harvestLines.length > 0 && (
-                    <Card>
+                    <Card className="border-border shadow-sm">
                       <CardContent className="pt-4 space-y-2">
                         <p className="text-sm font-medium">Harvests</p>
                         <div className="space-y-1">
@@ -155,10 +141,10 @@ export default function ReportsPage() {
           {/* ── Per-bed Breakdown ───────────────────────────────────── */}
           {bedBreakdown.length > 0 && (
             <section className="space-y-4">
-              <h2 className="text-lg font-medium">By Bed</h2>
-              <div className="grid gap-3 sm:grid-cols-2">
+              <h2 className="text-xl font-semibold mb-4 text-emerald-700 dark:text-emerald-400 border-b pb-2">By Bed</h2>
+              <div className="grid gap-4 sm:grid-cols-2">
                 {bedBreakdown.map(bed => (
-                  <Card key={bed.bedId}>
+                  <Card key={bed.bedId} className="border-border shadow-sm">
                     <CardContent className="pt-4 space-y-3">
                       <div className="flex items-center justify-between">
                         <p className="font-medium">{bed.bedName}</p>
@@ -195,7 +181,7 @@ export default function ReportsPage() {
           {/* ── Water Attribution ───────────────────────────────────── */}
           {waterYear && (
             <section className="space-y-4">
-              <h2 className="text-lg font-medium">Water Attribution — {selectedYear}</h2>
+              <h2 className="text-xl font-semibold mb-4 text-blue-700 dark:text-blue-400 border-b pb-2">Water Attribution — {selectedYear}</h2>
               {!waterYear.baselineMonthlyCost ? (
                 <p className="text-muted-foreground text-sm">
                   No baseline months — mark some water bills as non-garden months to calculate attribution.
@@ -215,7 +201,7 @@ export default function ReportsPage() {
                     />
                   </div>
                   {waterYear.activeMonths.length > 0 && (
-                    <Card>
+                    <Card className="border-border shadow-sm">
                       <CardContent className="pt-4">
                         <div className="overflow-x-auto">
                           <table className="w-full text-sm">
@@ -252,8 +238,8 @@ export default function ReportsPage() {
           {/* ── Year over Year ──────────────────────────────────────── */}
           {yearOverYear.length > 1 && (
             <section className="space-y-4">
-              <h2 className="text-lg font-medium">Year over Year</h2>
-              <Card>
+              <h2 className="text-xl font-semibold mb-4 border-b pb-2">Year over Year</h2>
+              <Card className="border-border shadow-sm">
                 <CardContent className="pt-4">
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
@@ -290,8 +276,8 @@ export default function ReportsPage() {
           {yearOverYear.filter(y => y.year === selectedYear).map(y =>
             y.months.length > 0 ? (
               <section key={y.year} className="space-y-4">
-                <h2 className="text-lg font-medium">Monthly Breakdown</h2>
-                <Card>
+                <h2 className="text-xl font-semibold mb-4 border-b pb-2">Monthly Breakdown</h2>
+                <Card className="border-border shadow-sm">
                   <CardContent className="pt-4">
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
@@ -339,13 +325,13 @@ function StatCard({ label, value, sub, highlight, warn }: {
   warn?: boolean
 }) {
   return (
-    <Card>
-      <CardContent className="pt-4">
-        <p className="text-xs text-muted-foreground uppercase tracking-wide">{label}</p>
-        <p className={`text-2xl font-semibold mt-1 tabular-nums ${highlight === 'green' ? 'text-green-600' : warn ? 'text-muted-foreground' : ''}`}>
+    <Card className="border-border shadow-sm">
+      <CardContent className="pt-5">
+        <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">{label}</p>
+        <p className={`text-3xl font-bold mt-1 tabular-nums ${highlight === 'green' ? 'text-green-600 dark:text-green-400' : warn ? 'text-muted-foreground' : 'text-foreground'}`}>
           {value}
         </p>
-        {sub && <p className={`text-xs mt-0.5 ${warn ? 'text-destructive/70' : 'text-muted-foreground'}`}>{sub}</p>}
+        {sub && <p className={`text-sm mt-1 ${warn ? 'text-destructive/70' : 'text-muted-foreground'}`}>{sub}</p>}
       </CardContent>
     </Card>
   )

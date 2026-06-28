@@ -39,7 +39,7 @@ public class BedService(IBedRepository bedRepository, IGardenRepository gardenRe
         return bed;
     }
 
-    public async Task<bool> UpdateAsync(int id, int userId, string name, string? material, int expectedLifespanYears, string? notes)
+    public async Task<bool> UpdateAsync(int id, int userId, string name, decimal lengthFt, decimal widthFt, decimal depthIn, string? material, int expectedLifespanYears, DateOnly installedDate, string? notes)
     {
         var bed = await GetByIdAsync(id, userId);
         if (bed == null)
@@ -47,7 +47,9 @@ public class BedService(IBedRepository bedRepository, IGardenRepository gardenRe
             logger.LogInformation("Bed {BedId} update failed — not found or not owned by user {UserId}", id, userId);
             return false;
         }
-        bed.Name = name; bed.Material = material; bed.ExpectedLifespanYears = expectedLifespanYears; bed.Notes = notes;
+        bed.Name = name; bed.LengthFt = lengthFt; bed.WidthFt = widthFt; bed.DepthIn = depthIn;
+        bed.Material = material; bed.ExpectedLifespanYears = expectedLifespanYears;
+        bed.InstalledDate = installedDate; bed.Notes = notes;
         await bedRepository.UpdateAsync(bed);
         logger.LogInformation("Bed {BedId} updated by user {UserId}", id, userId);
         return true;

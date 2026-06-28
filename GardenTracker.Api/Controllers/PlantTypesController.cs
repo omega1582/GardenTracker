@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace GardenTracker.Api.Controllers;
 
 [Route("api/v1/plant-types")]
-public class PlantTypesController(IPlantTypeService plantTypeService, IPlantVarietyService plantVarietyService) : ApiControllerBase
+public class PlantTypesController(IPlantTypeService plantTypeService, IPlantVarietyService plantVarietyService, IPlantCatalogCsvImportService csvImportService) : ApiControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<IEnumerable<PlantTypeResponse>>> GetAll()
@@ -28,14 +28,14 @@ public class PlantTypesController(IPlantTypeService plantTypeService, IPlantVari
     [HttpPost]
     public async Task<ActionResult<PlantTypeResponse>> Create(CreatePlantTypeRequest request)
     {
-        var type = await plantTypeService.CreateAsync(request.Name, request.GrowthHabit, request.DaysToMaturity, request.SpacingInches, request.SunPreference, request.IsPerennial);
+        var type = await plantTypeService.CreateAsync(request.Name, request.Category, request.GrowthHabit, request.DaysToMaturity, request.SpacingInches, request.SunPreference, request.IsPerennial);
         return CreatedAtAction(nameof(GetById), new { id = type.Id }, ToResponse(type));
     }
 
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, CreatePlantTypeRequest request)
     {
-        var updated = await plantTypeService.UpdateAsync(id, request.Name, request.GrowthHabit, request.DaysToMaturity, request.SpacingInches, request.SunPreference, request.IsPerennial);
+        var updated = await plantTypeService.UpdateAsync(id, request.Name, request.Category, request.GrowthHabit, request.DaysToMaturity, request.SpacingInches, request.SunPreference, request.IsPerennial);
         return updated ? NoContent() : NotFound();
     }
 
@@ -57,10 +57,22 @@ public class PlantTypesController(IPlantTypeService plantTypeService, IPlantVari
         return CreatedAtAction(nameof(GetVarieties), new { id }, ToVarietyResponse(variety, type.Name));
     }
 
+    [HttpPost("import")]
+    public async Task<IActionResult> Import(IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest(new { error = "No file provided." });
+
+        using var stream = file.OpenReadStream();
+        var result = await csvImportService.ImportAsync(stream);
+        return Ok(result);
+    }
+
     private static PlantTypeResponse ToResponse(PlantType t) => new()
     {
         Id = t.Id,
         Name = t.Name,
+        Category = t.Category.ToString(),
         GrowthHabit = t.GrowthHabit?.ToString(),
         DaysToMaturity = t.DaysToMaturity,
         SpacingInches = t.SpacingInches,

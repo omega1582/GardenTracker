@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace GardenTracker.Api.Controllers;
 
 [Route("api/v1/water-bills")]
-public class WaterBillsController(IWaterBillService waterBillService) : ApiControllerBase
+public class WaterBillsController(IWaterBillService waterBillService, IWaterBillCsvImportService csvImportService) : ApiControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<IEnumerable<WaterBillResponse>>> GetAll([FromQuery] int? year)
@@ -56,6 +56,17 @@ public class WaterBillsController(IWaterBillService waterBillService) : ApiContr
     {
         var deleted = await waterBillService.DeleteAsync(id, CurrentUserId);
         return deleted ? NoContent() : NotFound();
+    }
+
+    [HttpPost("import")]
+    public async Task<IActionResult> Import(IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest(new { error = "No file provided." });
+
+        using var stream = file.OpenReadStream();
+        var result = await csvImportService.ImportAsync(CurrentUserId, stream);
+        return Ok(result);
     }
 
     private static WaterBillResponse Map(WaterBill w) => new()

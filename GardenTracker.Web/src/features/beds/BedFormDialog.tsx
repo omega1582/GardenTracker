@@ -50,8 +50,12 @@ export default function BedFormDialog({ open, onClose, gardenId, editing }: Prop
       editing
         ? updateBed(gardenId, editing.id, {
             name,
+            lengthFt: Number(lengthFt),
+            widthFt: Number(widthFt),
+            depthIn: Number(depthIn),
             material: material || undefined,
             expectedLifespanYears: Number(lifespanYears),
+            installedDate,
             notes: notes || undefined,
           })
         : createBed(gardenId, {
@@ -87,9 +91,7 @@ export default function BedFormDialog({ open, onClose, gardenId, editing }: Prop
             <Input id="b-name" value={name} onChange={(e) => setName(e.target.value)} required maxLength={100} />
           </div>
 
-          {/* Dimensions — only on create */}
-          {!editing && (
-            <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1">
                 <Label htmlFor="b-length">Length (ft)</Label>
                 <Input id="b-length" type="number" step="0.1" min="0.1" value={lengthFt} onChange={(e) => setLengthFt(e.target.value)} required />
@@ -103,7 +105,6 @@ export default function BedFormDialog({ open, onClose, gardenId, editing }: Prop
                 <Input id="b-depth" type="number" step="0.1" min="1" value={depthIn} onChange={(e) => setDepthIn(e.target.value)} required />
               </div>
             </div>
-          )}
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
@@ -116,12 +117,10 @@ export default function BedFormDialog({ open, onClose, gardenId, editing }: Prop
             </div>
           </div>
 
-          {!editing && (
-            <div className="space-y-1">
-              <Label htmlFor="b-installed">Installed Date</Label>
-              <Input id="b-installed" type="date" value={installedDate} onChange={(e) => setInstalledDate(e.target.value)} required />
-            </div>
-          )}
+          <div className="space-y-1">
+            <Label htmlFor="b-installed">Installed Date</Label>
+            <Input id="b-installed" type="date" value={installedDate} onChange={(e) => setInstalledDate(e.target.value)} required />
+          </div>
 
           <div className="space-y-1">
             <Label htmlFor="b-notes">Notes <span className="text-muted-foreground">(optional)</span></Label>

@@ -4,16 +4,18 @@ import { getInventory, deleteInventoryItem, adjustInventoryRemaining, exportInve
 import type { InventoryItem } from '@/types/inventory'
 import InventoryFormDialog from './InventoryFormDialog'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Download, Upload, Plus, Package } from 'lucide-react'
 
-const CURRENT_YEAR = new Date().getFullYear()
-const ALL_YEARS = 'all'
+import { useSearchParams } from 'react-router-dom'
 
 export default function InventoryPage() {
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<InventoryItem | undefined>()
-  const [selectedYear, setSelectedYear] = useState<number | 'all'>(CURRENT_YEAR)
+  const [searchParams] = useSearchParams()
+  const activeYearParam = searchParams.get('year')
+  const selectedYear = activeYearParam === 'all' || !activeYearParam ? 'all' : Number(activeYearParam)
   const [importStatus, setImportStatus] = useState<{ created: number; updated: number; errors: string[] } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const qc = useQueryClient()
@@ -61,12 +63,7 @@ export default function InventoryPage() {
 
   if (isLoading) return <p className="text-muted-foreground">Loading…</p>
 
-  // Build year options from purchase dates present in data
-  const years = Array.from(
-    new Set(items.map(i => Number(i.purchaseDate.slice(0, 4))))
-  ).sort((a, b) => b - a)
-
-  const filtered = selectedYear === ALL_YEARS
+  const filtered = selectedYear === 'all'
     ? items
     : items.filter(i => i.purchaseDate.startsWith(String(selectedYear)))
 
@@ -81,30 +78,25 @@ export default function InventoryPage() {
   }, {})
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold tracking-tight">Inventory</h1>
-        <div className="flex items-center gap-3">
-          {years.length > 0 && (
-            <select
-              className="rounded-md border border-input bg-background px-3 py-1.5 text-sm"
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(e.target.value === ALL_YEARS ? ALL_YEARS : Number(e.target.value))}
-            >
-              <option value={ALL_YEARS}>All years</option>
-              {years.map(y => (
-                <option key={y} value={y}>{y}</option>
-              ))}
-            </select>
-          )}
-          <Button size="sm" variant="outline" onClick={() => exportMutation.mutate()} disabled={exportMutation.isPending}>
-            {exportMutation.isPending ? 'Exporting…' : 'Export CSV'}
+    <div className="flex flex-col h-full overflow-y-auto p-6 lg:p-8 space-y-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Inventory</h1>
+          <p className="mt-1 text-muted-foreground">Manage your seeds, tools, and supplies.</p>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button size="sm" variant="outline" className="gap-2" onClick={() => exportMutation.mutate()} disabled={exportMutation.isPending}>
+            <Download className="w-4 h-4" />
+            {exportMutation.isPending ? 'Exporting…' : 'Export'}
           </Button>
-          <Button size="sm" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={importMutation.isPending}>
-            {importMutation.isPending ? 'Importing…' : 'Import CSV'}
+          <Button size="sm" variant="outline" className="gap-2" onClick={() => fileInputRef.current?.click()} disabled={importMutation.isPending}>
+            <Upload className="w-4 h-4" />
+            {importMutation.isPending ? 'Importing…' : 'Import'}
           </Button>
           <input ref={fileInputRef} type="file" accept=".csv" className="hidden" onChange={handleFileChange} />
-          <Button size="sm" onClick={openAdd}>Add Item</Button>
+          <Button size="sm" className="gap-2" onClick={openAdd}>
+            <Plus className="w-4 h-4" /> Add Item
+          </Button>
         </div>
       </div>
 
@@ -124,21 +116,30 @@ export default function InventoryPage() {
       )}
 
       {filtered.length === 0 ? (
-        <p className="text-muted-foreground">
-          {items.length === 0
-            ? 'No inventory yet. Add seeds or plants you\'ve purchased.'
-            : `No inventory for ${selectedYear}.`}
-        </p>
+        <div className="flex flex-col items-center justify-center py-12 text-center border-2 border-dashed rounded-xl h-64 mt-4">
+          <div className="h-12 w-12 rounded-full bg-slate-500/10 flex items-center justify-center mb-4">
+            <Package className="h-6 w-6 text-slate-500" />
+          </div>
+          <h3 className="text-lg font-medium">No inventory items</h3>
+          <p className="text-sm text-muted-foreground max-w-sm mt-1 mb-4">
+            {items.length === 0
+              ? 'Add seeds, tools, or supplies you\'ve purchased.'
+              : `No inventory found for ${selectedYear}.`}
+          </p>
+          <Button onClick={openAdd} variant="outline">Add Item</Button>
+        </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-8 pb-8">
           {Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b)).map(([plantType, varieties]) => (
             <div key={plantType}>
-              <h2 className="text-base font-semibold mb-2">{plantType}</h2>
-              <div className="space-y-3">
+              <h2 className="text-xl font-semibold mb-4 text-emerald-700 dark:text-emerald-400 border-b pb-2">{plantType}</h2>
+              <div className="grid gap-4 md:grid-cols-2">
                 {Object.entries(varieties).sort(([a], [b]) => a.localeCompare(b)).map(([variety, purchases]) => (
-                  <Card key={variety}>
-                    <CardContent className="pt-4 space-y-2">
-                      <p className="font-medium text-sm">{variety}</p>
+                  <Card key={variety} className="border-border shadow-sm">
+                    <CardHeader className="bg-slate-50 dark:bg-slate-900/50 py-3 border-b">
+                      <CardTitle className="text-base font-medium">{variety}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-3 pb-3 space-y-2">
                       <div className="divide-y divide-border">
                         {purchases.map((item) => (
                           <InventoryRow key={item.id} item={item} onEdit={openEdit} />

@@ -6,6 +6,12 @@ namespace GardenTracker.Data.Repositories;
 
 public class PlantVarietyRepository(IConnectionFactory connectionFactory) : IPlantVarietyRepository
 {
+    public async Task<IEnumerable<PlantVariety>> GetAllAsync()
+    {
+        using var conn = connectionFactory.CreateConnection();
+        return await conn.QueryAsync<PlantVariety>("SELECT * FROM PlantVarieties ORDER BY Name");
+    }
+
     public async Task<IEnumerable<PlantVariety>> GetByPlantTypeAsync(int plantTypeId)
     {
         using var conn = connectionFactory.CreateConnection();
