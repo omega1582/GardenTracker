@@ -19,7 +19,7 @@ export default function PlantsPage() {
   const [editingType, setEditingType] = useState<PlantType | undefined>()
   const [varietyFormOpen, setVarietyFormOpen] = useState(false)
   const [editingVariety, setEditingVariety] = useState<PlantVariety | undefined>()
-  
+
   // Navigation State
   // Navigation State from URL
   const [searchParams] = useSearchParams()
@@ -61,7 +61,7 @@ export default function PlantsPage() {
 
   // Determine what to show in the main grid
   const selectedTypeObj = selectedTypeId ? plantTypes.find(t => t.id === selectedTypeId) : null
-  
+
   const displayedVarieties = useMemo(() => {
     if (selectedTypeId) {
       return allVarieties.filter(v => v.plantTypeId === selectedTypeId)
@@ -125,7 +125,7 @@ export default function PlantsPage() {
               <p className="text-muted-foreground mt-1 text-sm">
                 {displayedVarieties.length} varieties found
               </p>
-              
+
               {selectedTypeObj && (
                 <div className="flex flex-wrap gap-2 mt-3">
                   {selectedTypeObj.growthHabit && <Badge variant="secondary">{selectedTypeObj.growthHabit}</Badge>}
@@ -135,12 +135,12 @@ export default function PlantsPage() {
                 </div>
               )}
             </div>
-            
+
             <div className="flex items-center gap-2">
               {selectedTypeObj ? (
-                 <Button onClick={() => { setEditingVariety(undefined); setVarietyFormOpen(true) }}>
-                   <Plus className="w-4 h-4 mr-2" /> Add Variety to {selectedTypeObj.name}
-                 </Button>
+                <Button onClick={() => { setEditingVariety(undefined); setVarietyFormOpen(true) }}>
+                  <Plus className="w-4 h-4 mr-2" /> Add Variety to {selectedTypeObj.name}
+                </Button>
               ) : (
                 <p className="text-sm text-muted-foreground">Select a specific Plant Type to add varieties.</p>
               )}
@@ -166,15 +166,15 @@ export default function PlantsPage() {
                 {displayedVarieties.map(variety => (
                   <Card key={variety.id} className="overflow-hidden group flex flex-col">
                     <div className="aspect-[4/3] w-full bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/40 flex items-center justify-center relative">
-                       <Leaf className="w-12 h-12 text-emerald-600/20 dark:text-emerald-400/20" />
-                       <Button 
-                         variant="secondary" 
-                         size="icon" 
-                         className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8"
-                         onClick={() => { setEditingVariety(variety); setVarietyFormOpen(true) }}
-                       >
-                         <Edit2 className="w-4 h-4" />
-                       </Button>
+                      <Leaf className="w-12 h-12 text-emerald-600/20 dark:text-emerald-400/20" />
+                      <Button
+                        variant="secondary"
+                        size="icon"
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8"
+                        onClick={() => { setEditingVariety(variety); setVarietyFormOpen(true) }}
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </Button>
                     </div>
                     <CardHeader className="p-4 pb-2">
                       <div className="text-xs font-medium text-emerald-600 mb-1">{variety.plantTypeName}</div>
