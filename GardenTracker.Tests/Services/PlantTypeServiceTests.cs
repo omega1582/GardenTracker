@@ -33,10 +33,11 @@ public class PlantTypeServiceTests
     {
         _repo.Setup(r => r.CreateAsync(It.IsAny<PlantType>())).ReturnsAsync(3);
 
-        var result = await _sut.CreateAsync("Lettuce", GrowthHabit.Rosette, 45, 6, SunPreference.PartialSun, false);
+        var result = await _sut.CreateAsync("Lettuce", PlantCategory.Vegetables, GrowthHabit.Rosette, 45, 6, SunPreference.PartialSun, false);
 
         result.Name.Should().Be("Lettuce");
         result.Id.Should().Be(3);
+        result.Category.Should().Be(PlantCategory.Vegetables);
         result.GrowthHabit.Should().Be(GrowthHabit.Rosette);
         result.DaysToMaturity.Should().Be(45);
         result.SpacingInches.Should().Be(6);
@@ -49,7 +50,7 @@ public class PlantTypeServiceTests
     {
         _repo.Setup(r => r.CreateAsync(It.IsAny<PlantType>())).ReturnsAsync(4);
 
-        var result = await _sut.CreateAsync("Mint", null, null, null, null, null);
+        var result = await _sut.CreateAsync("Mint", PlantCategory.Herbs, null, null, null, null, null);
 
         result.GrowthHabit.Should().BeNull();
         result.DaysToMaturity.Should().BeNull();
@@ -63,11 +64,12 @@ public class PlantTypeServiceTests
     {
         _repo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(new PlantType { Id = 1, Name = "Old" });
 
-        var result = await _sut.UpdateAsync(1, "New", GrowthHabit.Upright, 70, 18, SunPreference.FullSun, false);
+        var result = await _sut.UpdateAsync(1, "New", PlantCategory.Vegetables, GrowthHabit.Upright, 70, 18, SunPreference.FullSun, false);
 
         result.Should().BeTrue();
         _repo.Verify(r => r.UpdateAsync(It.Is<PlantType>(p =>
             p.Name == "New" &&
+            p.Category == PlantCategory.Vegetables &&
             p.GrowthHabit == GrowthHabit.Upright &&
             p.DaysToMaturity == 70 &&
             p.SpacingInches == 18 &&
@@ -80,7 +82,7 @@ public class PlantTypeServiceTests
     {
         _repo.Setup(r => r.GetByIdAsync(99)).ReturnsAsync((PlantType?)null);
 
-        var result = await _sut.UpdateAsync(99, "New", null, null, null, null, null);
+        var result = await _sut.UpdateAsync(99, "New", PlantCategory.Vegetables, null, null, null, null, null);
 
         result.Should().BeFalse();
         _repo.Verify(r => r.UpdateAsync(It.IsAny<PlantType>()), Times.Never);

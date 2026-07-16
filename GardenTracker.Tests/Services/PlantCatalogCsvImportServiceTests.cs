@@ -31,8 +31,8 @@ public class PlantCatalogCsvImportServiceTests
     public async Task ImportAsync_NewTypeOnly_CreatesType()
     {
         const string csv = """
-            PlantTypeName,PlantVarietyName,GrowthHabit,DaysToMaturity,SpacingInches,SunPreference,IsPerennial,Notes
-            Tomato,,Vining,80,24,FullSun,false,
+            PlantTypeName,Category,PlantVarietyName,GrowthHabit,DaysToMaturity,SpacingInches,SunPreference,IsPerennial,Notes
+            Tomato,Vegetables,,Vining,80,24,FullSun,false,
             """;
 
         var result = await _sut.ImportAsync(MakeCsv(csv));
@@ -42,6 +42,7 @@ public class PlantCatalogCsvImportServiceTests
         result.Errors.Should().BeEmpty();
         _typeRepo.Verify(r => r.CreateAsync(It.Is<PlantType>(t =>
             t.Name == "Tomato" &&
+            t.Category == PlantCategory.Vegetables &&
             t.GrowthHabit == GrowthHabit.Vining &&
             t.DaysToMaturity == 80 &&
             t.SpacingInches == 24 &&
@@ -54,14 +55,14 @@ public class PlantCatalogCsvImportServiceTests
     public async Task ImportAsync_NewTypeAndVariety_CreatesBoth()
     {
         const string csv = """
-            PlantTypeName,PlantVarietyName,GrowthHabit,DaysToMaturity,SpacingInches,SunPreference,IsPerennial,Notes
-            Tomato,Cherokee Purple,Vining,80,24,FullSun,false,Great heirloom
+            PlantTypeName,Category,PlantVarietyName,GrowthHabit,DaysToMaturity,SpacingInches,SunPreference,IsPerennial,Notes
+            Tomato,Vegetables,Cherokee Purple,Vining,80,24,FullSun,false,Great heirloom
             """;
 
         var result = await _sut.ImportAsync(MakeCsv(csv));
 
         result.Created.Should().Be(2);
-        _typeRepo.Verify(r => r.CreateAsync(It.Is<PlantType>(t => t.Name == "Tomato")), Times.Once);
+        _typeRepo.Verify(r => r.CreateAsync(It.Is<PlantType>(t => t.Name == "Tomato" && t.Category == PlantCategory.Vegetables)), Times.Once);
         _varietyRepo.Verify(r => r.CreateAsync(It.Is<PlantVariety>(v =>
             v.Name == "Cherokee Purple" &&
             v.PlantTypeId == 1 &&
@@ -71,12 +72,12 @@ public class PlantCatalogCsvImportServiceTests
     [Fact]
     public async Task ImportAsync_ExistingType_DoesNotDuplicate()
     {
-        var existingType = new PlantType { Id = 5, Name = "Pepper" };
+        var existingType = new PlantType { Id = 5, Name = "Pepper", Category = PlantCategory.Vegetables };
         _typeRepo.Setup(r => r.GetByNameAsync("Pepper")).ReturnsAsync(existingType);
 
         const string csv = """
-            PlantTypeName,PlantVarietyName,GrowthHabit,DaysToMaturity,SpacingInches,SunPreference,IsPerennial,Notes
-            Pepper,Jalapeño,,,18,FullSun,false,
+            PlantTypeName,Category,PlantVarietyName,GrowthHabit,DaysToMaturity,SpacingInches,SunPreference,IsPerennial,Notes
+            Pepper,Vegetables,Jalapeño,,,18,FullSun,false,
             """;
 
         var result = await _sut.ImportAsync(MakeCsv(csv));
@@ -88,14 +89,14 @@ public class PlantCatalogCsvImportServiceTests
     [Fact]
     public async Task ImportAsync_ExistingVariety_UpdatesAttributes()
     {
-        var existingType = new PlantType { Id = 3, Name = "Lettuce" };
+        var existingType = new PlantType { Id = 3, Name = "Lettuce", Category = PlantCategory.Vegetables };
         var existingVariety = new PlantVariety { Id = 20, PlantTypeId = 3, Name = "Butterhead", DaysToMaturity = 55 };
         _typeRepo.Setup(r => r.GetByNameAsync("Lettuce")).ReturnsAsync(existingType);
         _varietyRepo.Setup(r => r.GetByPlantTypeAndNameAsync(3, "Butterhead")).ReturnsAsync(existingVariety);
 
         const string csv = """
-            PlantTypeName,PlantVarietyName,GrowthHabit,DaysToMaturity,SpacingInches,SunPreference,IsPerennial,Notes
-            Lettuce,Butterhead,,60,,PartialSun,,Updated notes
+            PlantTypeName,Category,PlantVarietyName,GrowthHabit,DaysToMaturity,SpacingInches,SunPreference,IsPerennial,Notes
+            Lettuce,Vegetables,Butterhead,,60,,PartialSun,,Updated notes
             """;
 
         var result = await _sut.ImportAsync(MakeCsv(csv));
@@ -111,12 +112,12 @@ public class PlantCatalogCsvImportServiceTests
     [Fact]
     public async Task ImportAsync_TypeOnlyRow_UpdatesExistingTypeAttributes()
     {
-        var existingType = new PlantType { Id = 2, Name = "Kale", DaysToMaturity = 50 };
+        var existingType = new PlantType { Id = 2, Name = "Kale", Category = PlantCategory.Vegetables, DaysToMaturity = 50 };
         _typeRepo.Setup(r => r.GetByNameAsync("Kale")).ReturnsAsync(existingType);
 
         const string csv = """
-            PlantTypeName,PlantVarietyName,GrowthHabit,DaysToMaturity,SpacingInches,SunPreference,IsPerennial,Notes
-            Kale,,Upright,60,18,FullSun,true,
+            PlantTypeName,Category,PlantVarietyName,GrowthHabit,DaysToMaturity,SpacingInches,SunPreference,IsPerennial,Notes
+            Kale,Vegetables,,Upright,60,18,FullSun,true,
             """;
 
         var result = await _sut.ImportAsync(MakeCsv(csv));
@@ -124,6 +125,7 @@ public class PlantCatalogCsvImportServiceTests
         result.Updated.Should().Be(1);
         _typeRepo.Verify(r => r.UpdateAsync(It.Is<PlantType>(t =>
             t.Id == 2 &&
+            t.Category == PlantCategory.Vegetables &&
             t.DaysToMaturity == 60 &&
             t.GrowthHabit == GrowthHabit.Upright)), Times.Once);
     }
@@ -132,10 +134,10 @@ public class PlantCatalogCsvImportServiceTests
     public async Task ImportAsync_MultipleVarietiesSameType_CreatesTypeOnce()
     {
         const string csv = """
-            PlantTypeName,PlantVarietyName,GrowthHabit,DaysToMaturity,SpacingInches,SunPreference,IsPerennial,Notes
-            Tomato,Roma,,75,18,FullSun,false,
-            Tomato,Cherokee Purple,,80,24,FullSun,false,
-            Tomato,Sun Gold,,65,18,FullSun,false,
+            PlantTypeName,Category,PlantVarietyName,GrowthHabit,DaysToMaturity,SpacingInches,SunPreference,IsPerennial,Notes
+            Tomato,Vegetables,Roma,,75,18,FullSun,false,
+            Tomato,Vegetables,Cherokee Purple,,80,24,FullSun,false,
+            Tomato,Vegetables,Sun Gold,,65,18,FullSun,false,
             """;
 
         _typeRepo.Setup(r => r.CreateAsync(It.IsAny<PlantType>())).ReturnsAsync(1);
@@ -151,8 +153,8 @@ public class PlantCatalogCsvImportServiceTests
     public async Task ImportAsync_MissingTypeName_RecordsError()
     {
         const string csv = """
-            PlantTypeName,PlantVarietyName,GrowthHabit,DaysToMaturity,SpacingInches,SunPreference,IsPerennial,Notes
-            ,Roma,,75,18,FullSun,false,
+            PlantTypeName,Category,PlantVarietyName,GrowthHabit,DaysToMaturity,SpacingInches,SunPreference,IsPerennial,Notes
+            ,Vegetables,Roma,,75,18,FullSun,false,
             """;
 
         var result = await _sut.ImportAsync(MakeCsv(csv));
@@ -166,14 +168,15 @@ public class PlantCatalogCsvImportServiceTests
     public async Task ImportAsync_UnknownEnumValue_TreatsAsNull()
     {
         const string csv = """
-            PlantTypeName,PlantVarietyName,GrowthHabit,DaysToMaturity,SpacingInches,SunPreference,IsPerennial,Notes
-            Basil,,NotARealHabit,,,FullSun,false,
+            PlantTypeName,Category,PlantVarietyName,GrowthHabit,DaysToMaturity,SpacingInches,SunPreference,IsPerennial,Notes
+            Basil,Herbs,,NotARealHabit,,,FullSun,false,
             """;
 
         var result = await _sut.ImportAsync(MakeCsv(csv));
 
         result.Errors.Should().BeEmpty();
         _typeRepo.Verify(r => r.CreateAsync(It.Is<PlantType>(t =>
+            t.Category == PlantCategory.Herbs &&
             t.GrowthHabit == null &&
             t.SunPreference == SunPreference.FullSun)), Times.Once);
     }
@@ -181,7 +184,7 @@ public class PlantCatalogCsvImportServiceTests
     [Fact]
     public async Task ImportAsync_EmptyCsv_ReturnsZeroCounts()
     {
-        const string csv = "PlantTypeName,PlantVarietyName,GrowthHabit,DaysToMaturity,SpacingInches,SunPreference,IsPerennial,Notes\n";
+        const string csv = "PlantTypeName,Category,PlantVarietyName,GrowthHabit,DaysToMaturity,SpacingInches,SunPreference,IsPerennial,Notes\n";
 
         var result = await _sut.ImportAsync(MakeCsv(csv));
 

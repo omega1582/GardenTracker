@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { createVariety, updateVariety, uploadVarietyImage } from '@/api/plants'
+import { useState, useEffect, useMemo } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { createVariety, updateVariety, uploadVarietyImage, getPlantTypes } from '@/api/plants'
 import type { PlantVariety, GrowthHabit, SunPreference } from '@/types/plant'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -44,6 +44,12 @@ export default function PlantVarietyFormDialog({
   const [imageUrl, setImageUrl] = useState('')
   const [isUploading, setIsUploading] = useState(false)
   const [uploadError, setUploadError] = useState('')
+  const [selectedPlantTypeId, setSelectedPlantTypeId] = useState<number>(0)
+
+  const { data: plantTypes = [] } = useQuery({
+    queryKey: ['plant-types'],
+    queryFn: getPlantTypes,
+  })
 
   useEffect(() => {
     if (open) {
@@ -56,8 +62,15 @@ export default function PlantVarietyFormDialog({
       setIsPerennial(editing?.isPerennial == null ? '' : editing.isPerennial ? 'true' : 'false')
       setImageUrl(editing?.imageUrl ?? '')
       setUploadError('')
+      setSelectedPlantTypeId(editing?.plantTypeId ?? plantTypeId ?? 0)
     }
-  }, [open, editing])
+  }, [open, editing, plantTypeId])
+
+  const currentPlantTypeName = useMemo(() => {
+    if (editing) return editing.plantTypeName
+    const selected = plantTypes.find(t => t.id === selectedPlantTypeId)
+    return selected?.name ?? plantTypeName
+  }, [editing, plantTypes, selectedPlantTypeId, plantTypeName])
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -86,7 +99,7 @@ export default function PlantVarietyFormDialog({
         isPerennial: isPerennial === '' ? null : isPerennial === 'true',
         imageUrl: imageUrl || null,
       }
-      return editing ? updateVariety(editing.id, payload) : createVariety(plantTypeId, payload)
+      return editing ? updateVariety(editing.id, payload) : createVariety(selectedPlantTypeId, payload)
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['varieties'] })
@@ -104,10 +117,29 @@ export default function PlantVarietyFormDialog({
       <DialogContent className="max-w-sm">
         <DialogHeader>
           <DialogTitle>
-            {editing ? 'Edit Variety' : `Add ${plantTypeName} Variety`}
+            {editing ? 'Edit Variety' : currentPlantTypeName ? `Add ${currentPlantTypeName} Variety` : 'Add Plant Variety'}
           </DialogTitle>
         </DialogHeader>
         <form id="variety-form" onSubmit={handleSubmit} className="space-y-4">
+          {!editing && (
+            <div className="space-y-1">
+              <Label htmlFor="v-type">Plant Type</Label>
+              <select
+                id="v-type"
+                className={selectClass}
+                value={selectedPlantTypeId || ''}
+                onChange={(e) => setSelectedPlantTypeId(Number(e.target.value))}
+                required
+              >
+                <option value="" disabled>Select a plant type...</option>
+                {plantTypes.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name} ({t.category})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <div className="space-y-1">
             <Label htmlFor="v-name">Variety Name</Label>
             <Input

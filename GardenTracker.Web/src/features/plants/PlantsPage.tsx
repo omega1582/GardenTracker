@@ -143,7 +143,9 @@ export default function PlantsPage() {
                   <Plus className="w-4 h-4 mr-2" /> Add Variety to {selectedTypeObj.name}
                 </Button>
               ) : (
-                <p className="text-sm text-muted-foreground">Select a specific Plant Type to add varieties.</p>
+                <Button onClick={() => { setEditingVariety(undefined); setVarietyFormOpen(true) }}>
+                  <Plus className="w-4 h-4 mr-2" /> Add Plant Variety
+                </Button>
               )}
             </div>
           </div>
