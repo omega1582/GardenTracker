@@ -19,8 +19,8 @@ import {
 } from '@/components/ui/dialog'
 
 const UNITS: { value: HarvestUnit; label: string }[] = [
-  { value: 'Pounds', label: 'Pounds (lbs)' },
   { value: 'Ounces', label: 'Ounces (oz)' },
+  { value: 'Pounds', label: 'Pounds (lbs)' },
   { value: 'Count', label: 'Count (each)' },
   { value: 'Bunch', label: 'Bunch' },
 ]
@@ -42,7 +42,9 @@ export default function HarvestFormDialog({ open, onClose, gardenId, year, beds,
   const [plantTypeId, setPlantTypeId] = useState<number | ''>('')
   const [plantVarietyId, setPlantVarietyId] = useState<number | ''>('')
   const [quantity, setQuantity] = useState('')
-  const [unit, setUnit] = useState<HarvestUnit>('Pounds')
+  const [lbs, setLbs] = useState('')
+  const [oz, setOz] = useState('')
+  const [unit, setUnit] = useState<HarvestUnit>('Ounces')
   const [harvestDate, setHarvestDate] = useState('')
   const [notes, setNotes] = useState('')
 
@@ -79,6 +81,7 @@ export default function HarvestFormDialog({ open, onClose, gardenId, year, beds,
     enabled: !!plantTypeId && open,
   })
 
+  // Initialize form state
   useEffect(() => {
     if (open) {
       if (editing) {
@@ -89,13 +92,33 @@ export default function HarvestFormDialog({ open, onClose, gardenId, year, beds,
         setHarvestDate(editing.harvestDate)
         setNotes(editing.notes ?? '')
         setPlantTypeId('')
+
+        // Initialize lbs/oz based on stored quantity and unit
+        if (editing.unit === 'Ounces') {
+          const totalOz = Number(editing.quantity)
+          const calculatedLbs = Math.floor(totalOz / 16)
+          const calculatedOz = Number((totalOz % 16).toFixed(2))
+          setLbs(calculatedLbs > 0 ? String(calculatedLbs) : '')
+          setOz(calculatedOz > 0 ? String(calculatedOz) : '')
+        } else if (editing.unit === 'Pounds') {
+          const totalLbs = Number(editing.quantity)
+          const calculatedLbs = Math.floor(totalLbs)
+          const calculatedOz = Number(((totalLbs - calculatedLbs) * 16).toFixed(2))
+          setLbs(calculatedLbs > 0 ? String(calculatedLbs) : '')
+          setOz(calculatedOz > 0 ? String(calculatedOz) : '')
+        } else {
+          setLbs('')
+          setOz('')
+        }
       } else {
         setSelectedGardenId(gardenId ?? '')
         setBedId(beds && beds.length === 1 ? beds[0].id : '')
         setPlantTypeId('')
         setPlantVarietyId('')
         setQuantity('')
-        setUnit('Pounds')
+        setLbs('')
+        setOz('')
+        setUnit('Ounces') // Default to Ounces as requested
         setHarvestDate(new Date().toISOString().slice(0, 10))
         setNotes('')
       }
@@ -109,6 +132,21 @@ export default function HarvestFormDialog({ open, onClose, gardenId, year, beds,
     }
   }, [selectedGardenId, editing, gardenId])
 
+  // Synchronize split lbs/oz inputs to the single quantity field
+  useEffect(() => {
+    if (unit === 'Pounds' || unit === 'Ounces') {
+      const l = lbs ? Number(lbs) : 0
+      const o = oz ? Number(oz) : 0
+      if (unit === 'Ounces') {
+        const total = l * 16 + o
+        setQuantity(total > 0 ? String(Number(total.toFixed(2))) : '')
+      } else {
+        const total = l + o / 16
+        setQuantity(total > 0 ? String(Number(total.toFixed(4))) : '')
+      }
+    }
+  }, [lbs, oz, unit])
+
   // Extract year from harvestDate
   const calculatedYear = harvestDate ? Number(harvestDate.slice(0, 4)) : new Date().getFullYear()
   const activeYear = year ?? calculatedYear
@@ -116,6 +154,15 @@ export default function HarvestFormDialog({ open, onClose, gardenId, year, beds,
   function handlePlantTypeChange(val: string) {
     setPlantTypeId(val ? Number(val) : '')
     setPlantVarietyId('')
+  }
+
+  function handleUnitChange(val: HarvestUnit) {
+    setUnit(val)
+    if (val === 'Count' || val === 'Bunch') {
+      setLbs('')
+      setOz('')
+      setQuantity('')
+    }
   }
 
   const mutation = useMutation<void>({
@@ -265,27 +312,58 @@ export default function HarvestFormDialog({ open, onClose, gardenId, year, beds,
           )}
 
           {/* Quantity + unit */}
-          <div className="flex gap-3">
-            <div className="space-y-1 flex-1">
-              <Label htmlFor="hv-qty">Quantity</Label>
-              <Input
-                id="hv-qty"
-                type="number"
-                min={0}
-                step="0.01"
-                value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
-                required
-                placeholder="e.g. 2.5"
-              />
-            </div>
+          <div className="flex gap-3 items-end">
+            {unit === 'Pounds' || unit === 'Ounces' ? (
+              <>
+                <div className="space-y-1 flex-1">
+                  <Label htmlFor="hv-lbs">Lbs</Label>
+                  <Input
+                    id="hv-lbs"
+                    type="number"
+                    min={0}
+                    step="1"
+                    value={lbs}
+                    onChange={(e) => setLbs(e.target.value)}
+                    placeholder="0"
+                  />
+                </div>
+                <div className="space-y-1 flex-1">
+                  <Label htmlFor="hv-oz">Oz</Label>
+                  <Input
+                    id="hv-oz"
+                    type="number"
+                    min={0}
+                    max={15.99}
+                    step="0.01"
+                    value={oz}
+                    onChange={(e) => setOz(e.target.value)}
+                    placeholder="0.0"
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="space-y-1 flex-1">
+                <Label htmlFor="hv-qty">Quantity</Label>
+                <Input
+                  id="hv-qty"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={quantity}
+                  onChange={(e) => setQuantity(e.target.value)}
+                  required
+                  placeholder="e.g. 2.5"
+                />
+              </div>
+            )}
+            
             <div className="space-y-1 w-36">
               <Label htmlFor="hv-unit">Unit</Label>
               <select
                 id="hv-unit"
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 value={unit}
-                onChange={(e) => setUnit(e.target.value as HarvestUnit)}
+                onChange={(e) => handleUnitChange(e.target.value as HarvestUnit)}
               >
                 {UNITS.map((u) => (
                   <option key={u.value} value={u.value}>{u.label}</option>
