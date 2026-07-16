@@ -145,6 +145,7 @@ export default function HarvestFormDialog({ open, onClose, gardenId, year, beds,
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['harvests'] })
+      qc.invalidateQueries({ queryKey: ['harvests-all-gardens'] })
       qc.invalidateQueries({ queryKey: ['reports'] })
       onClose()
     },

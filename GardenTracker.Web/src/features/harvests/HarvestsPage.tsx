@@ -98,6 +98,7 @@ export default function HarvestsPage() {
     mutationFn: ({ gardenId, year, id }: { gardenId: number, year: number, id: number }) => deleteHarvest(gardenId, year, id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['harvests'] })
+      qc.invalidateQueries({ queryKey: ['harvests-all-gardens'] })
       qc.invalidateQueries({ queryKey: ['reports'] })
     },
   })
