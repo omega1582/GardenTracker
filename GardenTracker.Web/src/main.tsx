@@ -14,6 +14,7 @@ import GardenDetailPage from '@/features/gardens/GardenDetailPage'
 import PlantsPage from '@/features/plants/PlantsPage'
 import InventoryPage from '@/features/inventory/InventoryPage'
 import WaterBillsPage from '@/features/waterBills/WaterBillsPage'
+import HarvestsPage from '@/features/harvests/HarvestsPage'
 import ReportsPage from '@/features/reports/ReportsPage'
 import './index.css'
 import { initTheme } from '@/lib/theme'
@@ -39,6 +40,7 @@ createRoot(document.getElementById('root')!).render(
                 <Route path="plants" element={<PlantsPage />} />
                 <Route path="inventory" element={<InventoryPage />} />
                 <Route path="water-bills" element={<WaterBillsPage />} />
+                <Route path="harvests" element={<HarvestsPage />} />
                 <Route path="reports" element={<ReportsPage />} />
               </Route>
             </Route>

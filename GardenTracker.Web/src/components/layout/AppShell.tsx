@@ -5,9 +5,10 @@ import { getPlantTypes } from '@/api/plants'
 import { getGardens } from '@/api/gardens'
 import { getInventory } from '@/api/inventory'
 import { getWaterBills } from '@/api/waterBills'
+import { getSeasons } from '@/api/seasons'
 import { useAuth } from '@/features/auth/AuthContext'
 import { toggleTheme, getCurrentTheme } from '@/lib/theme'
-import { LayoutDashboard, Trees, Leaf, Package, Droplets, LineChart, LogOut, Sun, Moon, ChevronDown, ChevronRight } from 'lucide-react'
+import { LayoutDashboard, Trees, Leaf, Package, Droplets, LineChart, LogOut, Sun, Moon, ChevronDown, ChevronRight, Scale } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const CATEGORIES = ['Vegetables', 'Fruits', 'Herbs', 'Flowers', 'Ornamentals', 'Other']
@@ -18,6 +19,7 @@ const NAV_LINKS = [
   { to: '/plants',      label: 'Plants',    icon: Leaf },
   { to: '/inventory',   label: 'Inventory', icon: Package },
   { to: '/water-bills', label: 'Water',     icon: Droplets },
+  { to: '/harvests',    label: 'Harvests',  icon: Scale },
   { to: '/reports',     label: 'Reports',   icon: LineChart },
 ]
 
@@ -41,6 +43,24 @@ export default function AppShell() {
   const { data: gardens = [] } = useQuery({ queryKey: ['gardens'], queryFn: getGardens })
   const { data: inventory = [] } = useQuery({ queryKey: ['inventory'], queryFn: getInventory })
   const { data: waterBills = [] } = useQuery({ queryKey: ['water-bills'], queryFn: () => getWaterBills() })
+  
+  // Query to fetch all seasons across all gardens to get unique harvest years
+  const { data: allSeasons = [] } = useQuery({
+    queryKey: ['seasons-all-gardens', gardens.map(g => g.id)],
+    queryFn: async () => {
+      if (gardens.length === 0) return []
+      const promises = gardens.map(async (g) => {
+        try {
+          return await getSeasons(g.id)
+        } catch {
+          return []
+        }
+      })
+      const results = await Promise.all(promises)
+      return results.flat()
+    },
+    enabled: gardens.length > 0,
+  })
 
   // Derived Data
   const typesByCategory = CATEGORIES.reduce((acc, cat) => {
@@ -54,6 +74,8 @@ export default function AppShell() {
 
   const inventoryYears = Array.from(new Set(inventory.map(i => Number(i.purchaseDate.slice(0, 4))))).sort((a, b) => b - a)
   const waterBillYears = Array.from(new Set(waterBills.map(b => b.year))).sort((a, b) => b - a)
+  const harvestYears = Array.from(new Set(allSeasons.map(s => s.year))).sort((a, b) => b - a)
+  const displayHarvestYears = harvestYears.length > 0 ? harvestYears : [new Date().getFullYear()]
 
   const activeCategory = searchParams.get('category')
   const activeTypeId = Number(searchParams.get('typeId'))
@@ -177,6 +199,22 @@ export default function AppShell() {
                         className={cn(
                           "block px-3 py-1.5 text-sm rounded-lg transition-colors truncate",
                           (activeYear === String(y) || (!activeYear && pathname === '/water-bills' && y === waterBillYears[0]))
+                            ? "bg-emerald-500/10 text-emerald-400 font-medium"
+                            : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/30"
+                        )}
+                      >
+                        {y}
+                      </Link>
+                    ))}
+
+                    {/* Harvests Hierarchy */}
+                    {to === '/harvests' && displayHarvestYears.map(y => (
+                      <Link
+                        key={y}
+                        to={`/harvests?year=${y}`}
+                        className={cn(
+                          "block px-3 py-1.5 text-sm rounded-lg transition-colors truncate",
+                          (activeYear === String(y) || (!activeYear && pathname === '/harvests' && y === displayHarvestYears[0]))
                             ? "bg-emerald-500/10 text-emerald-400 font-medium"
                             : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/30"
                         )}
