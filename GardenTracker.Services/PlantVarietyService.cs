@@ -117,8 +117,13 @@ public class PlantVarietyService(IPlantVarietyRepository varietyRepository, IPla
                     "image/png" => ".png",
                     "image/gif" => ".gif",
                     "image/webp" => ".webp",
-                    _ => Path.GetExtension(imageUrl) ?? ".jpg"
+                    "image/avif" => ".avif",
+                    _ => GetCleanExtension(imageUrl)
                 };
+            }
+            else
+            {
+                ext = GetCleanExtension(imageUrl);
             }
 
             var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
@@ -139,6 +144,18 @@ public class PlantVarietyService(IPlantVarietyRepository varietyRepository, IPla
         {
             return imageUrl;
         }
+    }
+
+    private static string GetCleanExtension(string imageUrl)
+    {
+        var uriPath = imageUrl;
+        int qMarkIndex = uriPath.IndexOf('?');
+        if (qMarkIndex >= 0) uriPath = uriPath.Substring(0, qMarkIndex);
+        int hashIndex = uriPath.IndexOf('#');
+        if (hashIndex >= 0) uriPath = uriPath.Substring(0, hashIndex);
+
+        var ext = Path.GetExtension(uriPath);
+        return string.IsNullOrWhiteSpace(ext) ? ".jpg" : ext.ToLower();
     }
 
     private static void ApplyFallbacks(PlantVariety variety, PlantType plantType)
