@@ -48,7 +48,6 @@ GardenTracker/
 ├── GardenTracker.Web/        # React + Vite Frontend
 ├── GardenTracker.Tests/      # Unit & Integration Tests (Testcontainers)
 ├── GardenTracker.Database/   # Database project (.sqlproj)
-├── ANDROID_APP_PLAN.md       # Roadmap for the upcoming Kotlin mobile application
 ├── docker-compose.yml        # Docker orchestration config
 ├── run-dev.sh / .ps1         # Concurrently boots up the API and Web App in dev mode
 └── .env.example              # Template for environment configuration

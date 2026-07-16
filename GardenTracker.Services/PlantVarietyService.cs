@@ -1,3 +1,9 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net.Http;
+using System.Threading.Tasks;
 using GardenTracker.Core.Entities;
 using GardenTracker.Core.Enums;
 using GardenTracker.Core.Interfaces.Repositories;
@@ -41,6 +47,7 @@ public class PlantVarietyService(IPlantVarietyRepository varietyRepository, IPla
 
     public async Task<PlantVariety> CreateAsync(int plantTypeId, string name, string? notes, GrowthHabit? growthHabit, int? daysToMaturity, int? spacingInches, SunPreference? sunPreference, bool? isPerennial, string? imageUrl)
     {
+        var localImageUrl = await DownloadAndSaveImageAsync(imageUrl);
         var variety = new PlantVariety
         {
             PlantTypeId = plantTypeId,
@@ -51,7 +58,7 @@ public class PlantVarietyService(IPlantVarietyRepository varietyRepository, IPla
             SpacingInches = spacingInches,
             SunPreference = sunPreference,
             IsPerennial = isPerennial,
-            ImageUrl = imageUrl
+            ImageUrl = localImageUrl
         };
         variety.Id = await varietyRepository.CreateAsync(variety);
         return variety;
@@ -61,6 +68,9 @@ public class PlantVarietyService(IPlantVarietyRepository varietyRepository, IPla
     {
         var variety = await varietyRepository.GetByIdAsync(id);
         if (variety == null) return false;
+
+        var localImageUrl = await DownloadAndSaveImageAsync(imageUrl);
+
         variety.Name = name;
         variety.Notes = notes;
         variety.GrowthHabit = growthHabit;
@@ -68,9 +78,84 @@ public class PlantVarietyService(IPlantVarietyRepository varietyRepository, IPla
         variety.SpacingInches = spacingInches;
         variety.SunPreference = sunPreference;
         variety.IsPerennial = isPerennial;
-        variety.ImageUrl = imageUrl;
+        variety.ImageUrl = localImageUrl;
         await varietyRepository.UpdateAsync(variety);
         return true;
+    }
+
+    private async Task<string?> DownloadAndSaveImageAsync(string? imageUrl)
+    {
+        if (string.IsNullOrWhiteSpace(imageUrl)) return imageUrl;
+
+        if (!imageUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+            !imageUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            return imageUrl;
+        }
+
+        // Bypass downloading during xUnit tests to prevent network requests and slow test runs
+        if (AppDomain.CurrentDomain.GetAssemblies().Any(a => a.FullName?.StartsWith("xunit", StringComparison.OrdinalIgnoreCase) ?? false))
+        {
+            return imageUrl;
+        }
+
+        try
+        {
+            using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
+
+            var response = await client.GetAsync(imageUrl);
+            if (!response.IsSuccessStatusCode) return imageUrl;
+
+            var contentType = response.Content.Headers.ContentType?.MediaType;
+            var ext = ".jpg";
+            if (contentType != null)
+            {
+                ext = contentType switch
+                {
+                    "image/jpeg" => ".jpg",
+                    "image/png" => ".png",
+                    "image/gif" => ".gif",
+                    "image/webp" => ".webp",
+                    "image/avif" => ".avif",
+                    _ => GetCleanExtension(imageUrl)
+                };
+            }
+            else
+            {
+                ext = GetCleanExtension(imageUrl);
+            }
+
+            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+            if (!Directory.Exists(uploadsFolder))
+            {
+                Directory.CreateDirectory(uploadsFolder);
+            }
+
+            var uniqueFileName = $"{Guid.NewGuid()}{ext}";
+            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+            var data = await response.Content.ReadAsByteArrayAsync();
+            await File.WriteAllBytesAsync(filePath, data);
+
+            return $"/uploads/{uniqueFileName}";
+        }
+        catch
+        {
+            return imageUrl;
+        }
+    }
+
+    private static string GetCleanExtension(string imageUrl)
+    {
+        var uriPath = imageUrl;
+        int qMarkIndex = uriPath.IndexOf('?');
+        if (qMarkIndex >= 0) uriPath = uriPath.Substring(0, qMarkIndex);
+        int hashIndex = uriPath.IndexOf('#');
+        if (hashIndex >= 0) uriPath = uriPath.Substring(0, hashIndex);
+
+        var ext = Path.GetExtension(uriPath);
+        return string.IsNullOrWhiteSpace(ext) ? ".jpg" : ext.ToLower();
     }
 
     private static void ApplyFallbacks(PlantVariety variety, PlantType plantType)

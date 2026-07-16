@@ -37,3 +37,7 @@ GardenTracker.Web/.env.local
 AGENTS.md
 .agents/
 
+# Uploaded images
+GardenTracker.Api/wwwroot/uploads/
+
+
