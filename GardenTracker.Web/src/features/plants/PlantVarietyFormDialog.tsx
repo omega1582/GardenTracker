@@ -113,8 +113,19 @@ export default function PlantVarietyFormDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-sm">
+    <Dialog
+      open={open}
+      onOpenChange={(o, eventDetails) => {
+        if (!o) {
+          const reason = eventDetails?.reason;
+          if (reason === 'outside-press' || reason === 'escape-key') {
+            return;
+          }
+          onClose();
+        }
+      }}
+    >
+      <DialogContent className="max-w-sm" showCloseButton={false}>
         <DialogHeader>
           <DialogTitle>
             {editing ? 'Edit Variety' : currentPlantTypeName ? `Add ${currentPlantTypeName} Variety` : 'Add Plant Variety'}
