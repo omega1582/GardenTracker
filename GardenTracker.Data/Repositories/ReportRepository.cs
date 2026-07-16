@@ -36,7 +36,27 @@ public class ReportRepository(IConnectionFactory connectionFactory) : IReportRep
                      ORDER BY RecordedDate DESC),
                     (SELECT TOP 1 PricePerUnit FROM MarketPrices
                      WHERE SeasonId = s.Id AND PlantTypeId = pv.PlantTypeId AND PlantVarietyId IS NULL AND Unit = h.Unit
-                     ORDER BY RecordedDate DESC)
+                     ORDER BY RecordedDate DESC),
+                    CASE WHEN h.Unit = 0 THEN
+                        COALESCE(
+                            (SELECT TOP 1 PricePerUnit * 16.0 FROM MarketPrices
+                             WHERE SeasonId = s.Id AND PlantVarietyId = h.PlantVarietyId AND Unit = 1
+                             ORDER BY RecordedDate DESC),
+                            (SELECT TOP 1 PricePerUnit * 16.0 FROM MarketPrices
+                             WHERE SeasonId = s.Id AND PlantTypeId = pv.PlantTypeId AND PlantVarietyId IS NULL AND Unit = 1
+                             ORDER BY RecordedDate DESC)
+                        )
+                    END,
+                    CASE WHEN h.Unit = 1 THEN
+                        COALESCE(
+                            (SELECT TOP 1 PricePerUnit / 16.0 FROM MarketPrices
+                             WHERE SeasonId = s.Id AND PlantVarietyId = h.PlantVarietyId AND Unit = 0
+                             ORDER BY RecordedDate DESC),
+                            (SELECT TOP 1 PricePerUnit / 16.0 FROM MarketPrices
+                             WHERE SeasonId = s.Id AND PlantTypeId = pv.PlantTypeId AND PlantVarietyId IS NULL AND Unit = 0
+                             ORDER BY RecordedDate DESC)
+                        )
+                    END
                 ) AS PricePerUnit
             FROM Harvests h
             JOIN Seasons s ON h.SeasonId = s.Id
@@ -83,6 +103,26 @@ public class ReportRepository(IConnectionFactory connectionFactory) : IReportRep
                     (SELECT TOP 1 PricePerUnit FROM MarketPrices
                      WHERE SeasonId = s.Id AND PlantTypeId = pv.PlantTypeId AND PlantVarietyId IS NULL AND Unit = h.Unit
                      ORDER BY RecordedDate DESC),
+                    CASE WHEN h.Unit = 0 THEN
+                        COALESCE(
+                            (SELECT TOP 1 PricePerUnit * 16.0 FROM MarketPrices
+                             WHERE SeasonId = s.Id AND PlantVarietyId = h.PlantVarietyId AND Unit = 1
+                             ORDER BY RecordedDate DESC),
+                            (SELECT TOP 1 PricePerUnit * 16.0 FROM MarketPrices
+                             WHERE SeasonId = s.Id AND PlantTypeId = pv.PlantTypeId AND PlantVarietyId IS NULL AND Unit = 1
+                             ORDER BY RecordedDate DESC)
+                        )
+                    END,
+                    CASE WHEN h.Unit = 1 THEN
+                        COALESCE(
+                            (SELECT TOP 1 PricePerUnit / 16.0 FROM MarketPrices
+                             WHERE SeasonId = s.Id AND PlantVarietyId = h.PlantVarietyId AND Unit = 0
+                             ORDER BY RecordedDate DESC),
+                            (SELECT TOP 1 PricePerUnit / 16.0 FROM MarketPrices
+                             WHERE SeasonId = s.Id AND PlantTypeId = pv.PlantTypeId AND PlantVarietyId IS NULL AND Unit = 0
+                             ORDER BY RecordedDate DESC)
+                        )
+                    END,
                     0
                 )) AS Total
             FROM Harvests h
@@ -128,7 +168,27 @@ public class ReportRepository(IConnectionFactory connectionFactory) : IReportRep
                      ORDER BY RecordedDate DESC),
                     (SELECT TOP 1 PricePerUnit FROM MarketPrices
                      WHERE SeasonId = s.Id AND PlantTypeId = pv.PlantTypeId AND PlantVarietyId IS NULL AND Unit = h.Unit
-                     ORDER BY RecordedDate DESC)
+                     ORDER BY RecordedDate DESC),
+                    CASE WHEN h.Unit = 0 THEN
+                        COALESCE(
+                            (SELECT TOP 1 PricePerUnit * 16.0 FROM MarketPrices
+                             WHERE SeasonId = s.Id AND PlantVarietyId = h.PlantVarietyId AND Unit = 1
+                             ORDER BY RecordedDate DESC),
+                            (SELECT TOP 1 PricePerUnit * 16.0 FROM MarketPrices
+                             WHERE SeasonId = s.Id AND PlantTypeId = pv.PlantTypeId AND PlantVarietyId IS NULL AND Unit = 1
+                             ORDER BY RecordedDate DESC)
+                        )
+                    END,
+                    CASE WHEN h.Unit = 1 THEN
+                        COALESCE(
+                            (SELECT TOP 1 PricePerUnit / 16.0 FROM MarketPrices
+                             WHERE SeasonId = s.Id AND PlantVarietyId = h.PlantVarietyId AND Unit = 0
+                             ORDER BY RecordedDate DESC),
+                            (SELECT TOP 1 PricePerUnit / 16.0 FROM MarketPrices
+                             WHERE SeasonId = s.Id AND PlantTypeId = pv.PlantTypeId AND PlantVarietyId IS NULL AND Unit = 0
+                             ORDER BY RecordedDate DESC)
+                        )
+                    END
                 ) AS PricePerUnit
             FROM Harvests h
             INNER JOIN Seasons s ON h.SeasonId = s.Id

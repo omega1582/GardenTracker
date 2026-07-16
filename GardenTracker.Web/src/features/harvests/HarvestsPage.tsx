@@ -116,13 +116,37 @@ export default function HarvestsPage() {
       const gardenPrices = prices[h.gardenId] || []
 
       // Matching algorithm
+      // 1. Exact match (variety + unit)
       let match = gardenPrices.find(mp => mp.plantVarietyId === h.plantVarietyId && mp.unit === h.unit)
+      
+      // 2. Exact match (type + unit)
       if (!match && variety) {
         match = gardenPrices.find(mp => mp.plantTypeId === variety.plantTypeId && !mp.plantVarietyId && mp.unit === h.unit)
       }
 
-      const pricePerUnit = match ? match.pricePerUnit : null
-      const value = pricePerUnit != null ? h.quantity * pricePerUnit : null
+      let pricePerUnit = match ? match.pricePerUnit : null
+      let value = pricePerUnit != null ? h.quantity * pricePerUnit : null
+
+      // 3. Unit conversion fallback (Pounds <=> Ounces)
+      if (pricePerUnit === null && (h.unit === 'Pounds' || h.unit === 'Ounces')) {
+        const altUnit = h.unit === 'Pounds' ? 'Ounces' : 'Pounds'
+        
+        let altMatch = gardenPrices.find(mp => mp.plantVarietyId === h.plantVarietyId && mp.unit === altUnit)
+        if (!altMatch && variety) {
+          altMatch = gardenPrices.find(mp => mp.plantTypeId === variety.plantTypeId && !mp.plantVarietyId && mp.unit === altUnit)
+        }
+
+        if (altMatch) {
+          if (h.unit === 'Pounds') {
+            // Harvest is Pounds, Price is Ounces: price per lb = price per oz * 16
+            pricePerUnit = altMatch.pricePerUnit * 16.0
+          } else {
+            // Harvest is Ounces, Price is Pounds: price per oz = price per lb / 16
+            pricePerUnit = altMatch.pricePerUnit / 16.0
+          }
+          value = h.quantity * pricePerUnit
+        }
+      }
 
       return {
         ...h,
