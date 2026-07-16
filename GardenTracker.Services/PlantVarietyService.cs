@@ -69,11 +69,7 @@ public class PlantVarietyService(IPlantVarietyRepository varietyRepository, IPla
         var variety = await varietyRepository.GetByIdAsync(id);
         if (variety == null) return false;
 
-        var localImageUrl = imageUrl;
-        if (variety.ImageUrl != imageUrl)
-        {
-            localImageUrl = await DownloadAndSaveImageAsync(imageUrl);
-        }
+        var localImageUrl = await DownloadAndSaveImageAsync(imageUrl);
 
         variety.Name = name;
         variety.Notes = notes;
