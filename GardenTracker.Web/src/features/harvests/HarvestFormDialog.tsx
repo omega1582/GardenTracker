@@ -63,6 +63,9 @@ export default function HarvestFormDialog({ open, onClose, gardenId, year, beds,
   })
 
   const bedsList = beds ?? fetchedBeds
+  const sortedBeds = [...bedsList].sort((a, b) =>
+    a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })
+  )
 
   const { data: plantTypes = [] } = useQuery({
     queryKey: ['plant-types'],
@@ -213,7 +216,7 @@ export default function HarvestFormDialog({ open, onClose, gardenId, year, beds,
                 disabled={!activeGardenId}
               >
                 <option value="">{activeGardenId ? 'Select bed…' : 'Select garden first…'}</option>
-                {bedsList.map((b) => (
+                {sortedBeds.map((b) => (
                   <option key={b.id} value={b.id}>{b.name}</option>
                 ))}
               </select>

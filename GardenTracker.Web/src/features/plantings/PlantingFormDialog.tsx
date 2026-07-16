@@ -35,6 +35,9 @@ interface Props {
 
 export default function PlantingFormDialog({ open, onClose, gardenId, year, beds, editing }: Props) {
   const qc = useQueryClient()
+  const sortedBeds = [...beds].sort((a, b) =>
+    a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })
+  )
 
   const [bedId, setBedId] = useState<number | ''>('')
   const [plantTypeId, setPlantTypeId] = useState<number | ''>('')
@@ -168,7 +171,7 @@ export default function PlantingFormDialog({ open, onClose, gardenId, year, beds
                 required
               >
                 <option value="">Select bed…</option>
-                {beds.map((b) => (
+                {sortedBeds.map((b) => (
                   <option key={b.id} value={b.id}>{b.name}</option>
                 ))}
               </select>

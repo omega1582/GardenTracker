@@ -37,6 +37,9 @@ interface Props {
 
 export default function ExpenseFormDialog({ open, onClose, gardenId, year, beds, editing }: Props) {
   const qc = useQueryClient()
+  const sortedBeds = [...beds].sort((a, b) =>
+    a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })
+  )
 
   const [bedId, setBedId] = useState<number | ''>('')
   const [category, setCategory] = useState<ExpenseCategory>('Seeds')
@@ -162,7 +165,7 @@ export default function ExpenseFormDialog({ open, onClose, gardenId, year, beds,
                 onChange={(e) => setBedId(e.target.value ? Number(e.target.value) : '')}
               >
                 <option value="">No specific bed</option>
-                {beds.map((b) => (
+                {sortedBeds.map((b) => (
                   <option key={b.id} value={b.id}>{b.name}</option>
                 ))}
               </select>
