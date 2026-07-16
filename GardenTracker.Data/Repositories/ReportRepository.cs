@@ -94,42 +94,49 @@ public class ReportRepository(IConnectionFactory connectionFactory) : IReportRep
         using var conn = connectionFactory.CreateConnection();
         return await conn.QueryAsync<MonthlyTotal>(
             """
+            WITH HarvestPrices AS (
+                SELECT
+                    h.HarvestDate,
+                    h.Quantity,
+                    COALESCE(
+                        (SELECT TOP 1 PricePerUnit FROM MarketPrices
+                         WHERE SeasonId = s.Id AND PlantVarietyId = h.PlantVarietyId AND Unit = h.Unit
+                         ORDER BY RecordedDate DESC),
+                        (SELECT TOP 1 PricePerUnit FROM MarketPrices
+                         WHERE SeasonId = s.Id AND PlantTypeId = pv.PlantTypeId AND PlantVarietyId IS NULL AND Unit = h.Unit
+                         ORDER BY RecordedDate DESC),
+                        CASE WHEN h.Unit = 0 THEN
+                            COALESCE(
+                                (SELECT TOP 1 PricePerUnit * 16.0 FROM MarketPrices
+                                 WHERE SeasonId = s.Id AND PlantVarietyId = h.PlantVarietyId AND Unit = 1
+                                 ORDER BY RecordedDate DESC),
+                                (SELECT TOP 1 PricePerUnit * 16.0 FROM MarketPrices
+                                 WHERE SeasonId = s.Id AND PlantTypeId = pv.PlantTypeId AND PlantVarietyId IS NULL AND Unit = 1
+                                 ORDER BY RecordedDate DESC)
+                            )
+                        END,
+                        CASE WHEN h.Unit = 1 THEN
+                            COALESCE(
+                                (SELECT TOP 1 PricePerUnit / 16.0 FROM MarketPrices
+                                 WHERE SeasonId = s.Id AND PlantVarietyId = h.PlantVarietyId AND Unit = 0
+                                 ORDER BY RecordedDate DESC),
+                                (SELECT TOP 1 PricePerUnit / 16.0 FROM MarketPrices
+                                 WHERE SeasonId = s.Id AND PlantTypeId = pv.PlantTypeId AND PlantVarietyId IS NULL AND Unit = 0
+                                 ORDER BY RecordedDate DESC)
+                            )
+                        END,
+                        0
+                    ) AS PricePerUnit
+                FROM Harvests h
+                JOIN Seasons s ON h.SeasonId = s.Id
+                JOIN PlantVarieties pv ON h.PlantVarietyId = pv.Id
+                WHERE s.GardenId = @GardenId AND s.Year = @Year
+            )
             SELECT
-                MONTH(h.HarvestDate) AS Month,
-                SUM(h.Quantity * COALESCE(
-                    (SELECT TOP 1 PricePerUnit FROM MarketPrices
-                     WHERE SeasonId = s.Id AND PlantVarietyId = h.PlantVarietyId AND Unit = h.Unit
-                     ORDER BY RecordedDate DESC),
-                    (SELECT TOP 1 PricePerUnit FROM MarketPrices
-                     WHERE SeasonId = s.Id AND PlantTypeId = pv.PlantTypeId AND PlantVarietyId IS NULL AND Unit = h.Unit
-                     ORDER BY RecordedDate DESC),
-                    CASE WHEN h.Unit = 0 THEN
-                        COALESCE(
-                            (SELECT TOP 1 PricePerUnit * 16.0 FROM MarketPrices
-                             WHERE SeasonId = s.Id AND PlantVarietyId = h.PlantVarietyId AND Unit = 1
-                             ORDER BY RecordedDate DESC),
-                            (SELECT TOP 1 PricePerUnit * 16.0 FROM MarketPrices
-                             WHERE SeasonId = s.Id AND PlantTypeId = pv.PlantTypeId AND PlantVarietyId IS NULL AND Unit = 1
-                             ORDER BY RecordedDate DESC)
-                        )
-                    END,
-                    CASE WHEN h.Unit = 1 THEN
-                        COALESCE(
-                            (SELECT TOP 1 PricePerUnit / 16.0 FROM MarketPrices
-                             WHERE SeasonId = s.Id AND PlantVarietyId = h.PlantVarietyId AND Unit = 0
-                             ORDER BY RecordedDate DESC),
-                            (SELECT TOP 1 PricePerUnit / 16.0 FROM MarketPrices
-                             WHERE SeasonId = s.Id AND PlantTypeId = pv.PlantTypeId AND PlantVarietyId IS NULL AND Unit = 0
-                             ORDER BY RecordedDate DESC)
-                        )
-                    END,
-                    0
-                )) AS Total
-            FROM Harvests h
-            JOIN Seasons s ON h.SeasonId = s.Id
-            JOIN PlantVarieties pv ON h.PlantVarietyId = pv.Id
-            WHERE s.GardenId = @GardenId AND s.Year = @Year
-            GROUP BY MONTH(h.HarvestDate)
+                MONTH(HarvestDate) AS Month,
+                SUM(Quantity * PricePerUnit) AS Total
+            FROM HarvestPrices
+            GROUP BY MONTH(HarvestDate)
             """,
             new { GardenId = gardenId, Year = year });
     }
