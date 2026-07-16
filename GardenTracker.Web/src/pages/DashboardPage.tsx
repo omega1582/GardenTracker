@@ -1,11 +1,14 @@
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { getGardens } from '@/api/gardens'
 import { getPlantTypes, getAllVarieties } from '@/api/plants'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Trees, Leaf, Package, ChevronRight } from 'lucide-react'
+import { Trees, Leaf, Package, ChevronRight, Scale } from 'lucide-react'
+import HarvestFormDialog from '@/features/harvests/HarvestFormDialog'
 
 export default function DashboardPage() {
+  const [harvestFormOpen, setHarvestFormOpen] = useState(false)
   const { data: gardens = [] } = useQuery({ queryKey: ['gardens'], queryFn: getGardens })
   const { data: plantTypes = [] } = useQuery({ queryKey: ['plant-types'], queryFn: getPlantTypes })
   const { data: varieties = [] } = useQuery({ queryKey: ['varieties'], queryFn: getAllVarieties })
@@ -84,6 +87,22 @@ export default function DashboardPage() {
               </div>
               <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
             </Link>
+
+            <button 
+              onClick={() => setHarvestFormOpen(true)}
+              className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors group text-left w-full"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                  <Scale className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <div>
+                  <h4 className="font-medium">Log Harvest</h4>
+                  <p className="text-sm text-muted-foreground">Quickly record produce harvested from your beds</p>
+                </div>
+              </div>
+              <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+            </button>
             
             <Link 
               to="/plants" 
@@ -104,6 +123,11 @@ export default function DashboardPage() {
         </Card>
 
       </div>
+
+      <HarvestFormDialog
+        open={harvestFormOpen}
+        onClose={() => setHarvestFormOpen(false)}
+      />
     </div>
   )
 }

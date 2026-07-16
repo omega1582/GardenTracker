@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createHarvest, updateHarvest } from '@/api/harvests'
 import { getPlantTypes, getVarieties } from '@/api/plants'
+import { getGardens } from '@/api/gardens'
+import { getBeds } from '@/api/beds'
 import type { Bed } from '@/types/bed'
 import type { Harvest, HarvestUnit, CreateHarvestRequest, UpdateHarvestRequest } from '@/types/harvest'
 import { Button } from '@/components/ui/button'
@@ -26,15 +28,16 @@ const UNITS: { value: HarvestUnit; label: string }[] = [
 interface Props {
   open: boolean
   onClose: () => void
-  gardenId: number
-  year: number
-  beds: Bed[]
+  gardenId?: number
+  year?: number
+  beds?: Bed[]
   editing?: Harvest
 }
 
 export default function HarvestFormDialog({ open, onClose, gardenId, year, beds, editing }: Props) {
   const qc = useQueryClient()
 
+  const [selectedGardenId, setSelectedGardenId] = useState<number | ''>('')
   const [bedId, setBedId] = useState<number | ''>('')
   const [plantTypeId, setPlantTypeId] = useState<number | ''>('')
   const [plantVarietyId, setPlantVarietyId] = useState<number | ''>('')
@@ -43,15 +46,34 @@ export default function HarvestFormDialog({ open, onClose, gardenId, year, beds,
   const [harvestDate, setHarvestDate] = useState('')
   const [notes, setNotes] = useState('')
 
+  // Query to fetch all gardens (only if gardenId is not provided as prop)
+  const { data: allGardens = [] } = useQuery({
+    queryKey: ['gardens'],
+    queryFn: getGardens,
+    enabled: !gardenId && open,
+  })
+
+  const activeGardenId = gardenId ?? (selectedGardenId || 0)
+
+  // Query to fetch beds for selected garden (only if beds is not provided as prop)
+  const { data: fetchedBeds = [] } = useQuery({
+    queryKey: ['beds', activeGardenId],
+    queryFn: () => getBeds(Number(activeGardenId)),
+    enabled: !beds && !!activeGardenId && open,
+  })
+
+  const bedsList = beds ?? fetchedBeds
+
   const { data: plantTypes = [] } = useQuery({
     queryKey: ['plant-types'],
     queryFn: getPlantTypes,
+    enabled: open,
   })
 
   const { data: varieties = [] } = useQuery({
     queryKey: ['varieties', plantTypeId],
     queryFn: () => getVarieties(Number(plantTypeId)),
-    enabled: !!plantTypeId,
+    enabled: !!plantTypeId && open,
   })
 
   useEffect(() => {
@@ -65,7 +87,8 @@ export default function HarvestFormDialog({ open, onClose, gardenId, year, beds,
         setNotes(editing.notes ?? '')
         setPlantTypeId('')
       } else {
-        setBedId(beds.length === 1 ? beds[0].id : '')
+        setSelectedGardenId(gardenId ?? '')
+        setBedId(beds && beds.length === 1 ? beds[0].id : '')
         setPlantTypeId('')
         setPlantVarietyId('')
         setQuantity('')
@@ -74,7 +97,18 @@ export default function HarvestFormDialog({ open, onClose, gardenId, year, beds,
         setNotes('')
       }
     }
-  }, [open, editing, beds])
+  }, [open, editing, beds, gardenId])
+
+  // Reset bed when selected garden changes (only if not editing and not locked to a gardenId prop)
+  useEffect(() => {
+    if (!editing && !gardenId) {
+      setBedId('')
+    }
+  }, [selectedGardenId, editing, gardenId])
+
+  // Extract year from harvestDate
+  const calculatedYear = harvestDate ? Number(harvestDate.slice(0, 4)) : new Date().getFullYear()
+  const activeYear = year ?? calculatedYear
 
   function handlePlantTypeChange(val: string) {
     setPlantTypeId(val ? Number(val) : '')
@@ -83,6 +117,13 @@ export default function HarvestFormDialog({ open, onClose, gardenId, year, beds,
 
   const mutation = useMutation<void>({
     mutationFn: () => {
+      if (!activeGardenId) {
+        throw new Error('Garden selection is required.')
+      }
+      if (!activeYear) {
+        throw new Error('Harvest date / year is required.')
+      }
+
       if (editing) {
         const payload: UpdateHarvestRequest = {
           quantity: Number(quantity),
@@ -90,7 +131,7 @@ export default function HarvestFormDialog({ open, onClose, gardenId, year, beds,
           harvestDate,
           notes: notes || null,
         }
-        return updateHarvest(gardenId, year, editing.id, payload)
+        return updateHarvest(Number(activeGardenId), activeYear, editing.id, payload)
       }
       const payload: CreateHarvestRequest = {
         bedId: Number(bedId),
@@ -100,10 +141,11 @@ export default function HarvestFormDialog({ open, onClose, gardenId, year, beds,
         harvestDate,
         notes: notes || null,
       }
-      return createHarvest(gardenId, year, payload).then(() => {})
+      return createHarvest(Number(activeGardenId), activeYear, payload).then(() => {})
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['harvests', gardenId, year] })
+      qc.invalidateQueries({ queryKey: ['harvests'] })
+      qc.invalidateQueries({ queryKey: ['reports'] })
       onClose()
     },
   })
@@ -115,15 +157,45 @@ export default function HarvestFormDialog({ open, onClose, gardenId, year, beds,
 
   const canSubmit = editing
     ? !!quantity && !!harvestDate
-    : !!bedId && !!plantVarietyId && !!quantity && !!harvestDate
+    : !!activeGardenId && !!bedId && !!plantVarietyId && !!quantity && !!harvestDate
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-sm">
+    <Dialog
+      open={open}
+      onOpenChange={(o, eventDetails) => {
+        if (!o) {
+          const reason = eventDetails?.reason
+          if (reason === 'outside-press' || reason === 'escape-key') {
+            return
+          }
+          onClose()
+        }
+      }}
+    >
+      <DialogContent className="max-w-sm" showCloseButton={false}>
         <DialogHeader>
-          <DialogTitle>{editing ? 'Edit Harvest' : `Log Harvest — ${year}`}</DialogTitle>
+          <DialogTitle>{editing ? 'Edit Harvest' : `Log Harvest — ${activeYear}`}</DialogTitle>
         </DialogHeader>
         <form id="harvest-form" onSubmit={handleSubmit} className="space-y-4">
+
+          {/* Garden Selection (only if not pre-locked) */}
+          {!gardenId && !editing && (
+            <div className="space-y-1">
+              <Label htmlFor="hv-garden">Garden</Label>
+              <select
+                id="hv-garden"
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value={selectedGardenId}
+                onChange={(e) => setSelectedGardenId(e.target.value ? Number(e.target.value) : '')}
+                required
+              >
+                <option value="">Select garden…</option>
+                {allParamsGarden(allGardens).map((g) => (
+                  <option key={g.id} value={g.id}>{g.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Bed — fixed on edit */}
           {editing ? (
@@ -137,9 +209,10 @@ export default function HarvestFormDialog({ open, onClose, gardenId, year, beds,
                 value={bedId}
                 onChange={(e) => setBedId(e.target.value ? Number(e.target.value) : '')}
                 required
+                disabled={!activeGardenId}
               >
-                <option value="">Select bed…</option>
-                {beds.map((b) => (
+                <option value="">{activeGardenId ? 'Select bed…' : 'Select garden first…'}</option>
+                {bedsList.map((b) => (
                   <option key={b.id} value={b.id}>{b.name}</option>
                 ))}
               </select>
@@ -253,4 +326,8 @@ export default function HarvestFormDialog({ open, onClose, gardenId, year, beds,
       </DialogContent>
     </Dialog>
   )
+}
+
+function allParamsGarden(gardens: any[]) {
+  return gardens;
 }
